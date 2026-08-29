@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="sample_suite" tests="5" failures="2" errors="0" time="12.345">
+  <testsuite name="tests.login" tests="3" failures="1" timestamp="2026-08-22T00:01:00">
+    <testcase classname="tests.login" name="test_login_success" time="1.234" />
+    <testcase classname="tests.login" name="test_login_invalid_password" time="0.987">
+      <failure message="AssertionError: expected 401 but got 200">
+AssertionError: expected 401 but got 200
+  at tests/login.py:42 in test_login_invalid_password
+      </failure>
+    </testcase>
+    <testcase classname="tests.login" name="test_login_timeout" time="5.001">
+      <error message="TimeoutException: page load timed out after 5000ms">
+TimeoutException: page load timed out after 5000ms
+  at tests/login.py:88 in test_login_timeout
+      </error>
+    </testcase>
+  </testsuite>
+  <testsuite name="tests.checkout" tests="2" failures="0" timestamp="2026-08-22T00:01:15">
+    <testcase classname="tests.checkout" name="test_add_to_cart" time="2.100" />
+    <testcase classname="tests.checkout" name="test_apply_discount" time="3.023" />
+  </testsuite>
+</testsuites>

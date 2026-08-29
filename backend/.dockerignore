@@ -1,0 +1,30 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets – never bake into the image
+.env
+*.env
+
+# Local Qdrant data (mounted as a Docker volume)
+qdrant_data/
+
+# SQLite database (mounted as a Docker volume)
+*.db
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

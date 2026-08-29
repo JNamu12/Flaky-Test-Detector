@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+qdrant-client
+sentence-transformers
+groq
+python-dotenv
+sqlalchemy
+python-multipart

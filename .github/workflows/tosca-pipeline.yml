@@ -1,0 +1,134 @@
+name: Tosca → Flaky Test Detector Pipeline
+
+# ────────────────────────────────────────────────────────────────────────────
+# Triggers
+# ────────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+  workflow_dispatch:
+    inputs:
+      event_name:
+        description: "Tosca TestEvent name to trigger (overrides TOSCA_EVENT_NAME secret)"
+        required: false
+        type: string
+      detector_url:
+        description: "Flaky Test Detector backend URL (overrides DETECTOR_URL secret)"
+        required: false
+        type: string
+
+  schedule:
+    # Run nightly at 02:00 UTC so flakiness trends accumulate over time
+    - cron: "0 2 * * *"
+
+# ────────────────────────────────────────────────────────────────────────────
+# Required repository secrets
+# (Settings → Secrets and variables → Actions → New repository secret)
+# ────────────────────────────────────────────────────────────────────────────
+# TOSCA_SERVER_URL       Full URL of your Tosca Server, e.g. https://tosca.corp.com
+# TOSCA_API_TOKEN        ToscaCI API access token (generate in Tosca Server settings)
+# TOSCA_PROJECT_NAME     Tosca project / workspace name
+# TOSCA_EVENT_NAME       Default TestEvent to trigger (can be overridden via workflow_dispatch)
+# DETECTOR_URL           Flaky Test Detector backend URL, e.g. https://api.your-host.com
+# DETECTOR_API_KEY       X-API-Key secret for the /ingest endpoint
+
+env:
+  JUNIT_OUT: results/tosca_junit.xml
+  TOSCA_POLL_INTERVAL: "15"   # seconds between status polls
+  TOSCA_TIMEOUT: "900"        # max seconds to wait for execution (15 min)
+
+jobs:
+  tosca-run-and-report:
+    name: Run Tosca tests → ingest results
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Set up Python (needed by the ingest converter tool) ───────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ── 3. Trigger Tosca TestEvent ────────────────────────────────────────
+      # The trigger script handles:
+      #   • Auth failure  → exit 2 + clear log message
+      #   • TestEvent not found → exit 2 + clear log message
+      #   • Network error → exit 2 + clear log message
+      #   • Timeout       → exit 3 + clear log message
+      #   • Test failures → exit 4, JUnit XML still downloaded for ingest
+      - name: Trigger Tosca TestEvent and download JUnit XML
+        id: tosca
+        # continue-on-error so that downstream ingest step always runs,
+        # even when tests fail (exit 4).  We fail the job explicitly below.
+        continue-on-error: true
+        env:
+          TOSCA_SERVER_URL:   ${{ secrets.TOSCA_SERVER_URL }}
+          TOSCA_API_TOKEN:    ${{ secrets.TOSCA_API_TOKEN }}
+          TOSCA_PROJECT_NAME: ${{ secrets.TOSCA_PROJECT_NAME }}
+          # workflow_dispatch input overrides the secret
+          TOSCA_EVENT_NAME: >-
+            ${{ inputs.event_name != '' && inputs.event_name
+                || secrets.TOSCA_EVENT_NAME }}
+          TOSCA_POLL_INTERVAL: ${{ env.TOSCA_POLL_INTERVAL }}
+          TOSCA_TIMEOUT:       ${{ env.TOSCA_TIMEOUT }}
+          TOSCA_JUNIT_OUT:     ${{ env.JUNIT_OUT }}
+        run: |
+          chmod +x tools/tosca_trigger.sh
+          bash tools/tosca_trigger.sh
+
+      # ── 4. Show trigger outcome ───────────────────────────────────────────
+      - name: Log Tosca trigger outcome
+        if: always()
+        run: |
+          outcome="${{ steps.tosca.outcome }}"
+          echo "Tosca trigger outcome: $outcome"
+          if [[ "$outcome" == "failure" ]]; then
+            echo "::warning::Tosca step failed. Check logs above for details."
+          fi
+
+      # ── 5. Send JUnit XML to Flaky Test Detector ─────────────────────────
+      # Runs even when Tosca tests fail (if: always()), so failure data
+      # reaches the detector and contributes to flakiness scoring.
+      - name: Ingest Tosca results into Flaky Test Detector
+        if: always()
+        env:
+          API_KEY: ${{ secrets.DETECTOR_API_KEY }}
+        run: |
+          DETECTOR_URL="${{ inputs.detector_url != '' && inputs.detector_url || secrets.DETECTOR_URL }}"
+
+          if [[ ! -f "${{ env.JUNIT_OUT }}" ]]; then
+            echo "::warning::JUnit XML not found at ${{ env.JUNIT_OUT }}. \
+          Tosca trigger likely failed before results were downloaded — skipping ingest."
+            exit 0
+          fi
+
+          python tools/junit_xml_to_ingest.py "${{ env.JUNIT_OUT }}" \
+            --url "${DETECTOR_URL}/api/v1/test-runs/ingest" \
+            --commit-sha "${{ github.sha }}" \
+            --api-key "${API_KEY}"
+
+      # ── 6. Upload JUnit XML as pipeline artifact ──────────────────────────
+      - name: Upload JUnit results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tosca-junit-${{ github.run_id }}
+          path: ${{ env.JUNIT_OUT }}
+          if-no-files-found: warn    # warn, not fail, if trigger died early
+
+      # ── 7. Fail the job if the Tosca trigger itself errored ───────────────
+      # (exit 4 = tests failed = expected; exit 2/3 = infra error = real failure)
+      - name: Propagate infrastructure errors
+        if: steps.tosca.outcome == 'failure'
+        run: |
+          echo "::error::Tosca trigger step failed. This is an infrastructure \
+          error (auth / network / timeout), not a test failure. \
+          Check the 'Trigger Tosca TestEvent' step logs above."
+          exit 1
