@@ -45,6 +45,8 @@ if os.path.exists(data_dir):
 @app.get("/dashboard.html", include_in_schema=False)
 async def serve_dashboard():
     dashboard_path = os.path.join(backend_dir, "dashboard.html")
+    if not os.path.exists(dashboard_path):
+        dashboard_path = os.path.abspath(os.path.join(backend_dir, "..", "dashboard.html"))
     if os.path.exists(dashboard_path):
         return FileResponse(dashboard_path)
     return {"message": "Flaky Test Detector API is running. Go to /docs for API documentation."}
