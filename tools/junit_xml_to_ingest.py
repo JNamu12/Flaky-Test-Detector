@@ -232,30 +232,39 @@ def diagnose(runs):
 
 # ---------------------------------------------------------------------------
 # HTTP POST
-# ---------------------------------------------------------------------------
+import time
 
-def post_payload(url, payload, api_key=None):
+def post_payload(url, payload, api_key=None, max_retries=3):
     data = json.dumps(payload).encode("utf-8")
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["X-API-Key"] = api_key
-    req  = urllib.request.Request(
-        url,
-        data=data,
-        headers=headers,
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            body = resp.read().decode()
-            print(f"HTTP {resp.status} -- Response: {body}")
-    except urllib.error.HTTPError as e:
-        body = e.read().decode()
-        print(f"HTTP {e.code} -- Error: {body}", file=sys.stderr)
-        sys.exit(1)
-    except urllib.error.URLError as e:
-        print(f"Connection error: {e.reason}", file=sys.stderr)
-        sys.exit(1)
+
+    for attempt in range(1, max_retries + 1):
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers=headers,
+            method="POST",
+        )
+        try:
+            print(f"Posting to {url} (Attempt {attempt}/{max_retries})...")
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                body = resp.read().decode()
+                print(f"HTTP {resp.status} -- Response: {body}")
+                return
+        except urllib.error.HTTPError as e:
+            body = e.read().decode()
+            print(f"HTTP {e.code} -- Error: {body}", file=sys.stderr)
+            sys.exit(1)
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            print(f"Attempt {attempt} failed: {e}. Server may be waking up from sleep.", file=sys.stderr)
+            if attempt < max_retries:
+                time.sleep(10)
+            else:
+                print("Max retries reached. Exiting.", file=sys.stderr)
+                sys.exit(1)
+
 
 
 # ---------------------------------------------------------------------------
