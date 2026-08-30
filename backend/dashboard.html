@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flaky Test Detector Dashboard</title>
+  <style>
+    /* Dark theme custom properties */
+    :root {
+      --bg: #0a0e15;               /* deep charcoal‑navy */
+      --surface: #151c28;           /* slightly lighter card background */
+      --border: #2a3545;            /* hairline border */
+      --text-primary: #e5e9f0;      /* main text */
+      --text-secondary: #cbd2db;    /* secondary text */
+      --text-muted: #7a889f;        /* muted/disabled text */
+
+      /* Semantic colors */
+      --teal-base: #0db39e;
+      --teal-bg: #0a3d36; /* muted background for pass */
+      --teal-text: #e0f7f4; /* text on teal background */
+
+      --amber-base: #ffb400;
+      --amber-bg: #3b2e00; /* muted background for flaky */
+      --amber-text: #fff4e5; /* text on amber background */
+
+      --coral-base: #ff6f61;
+      --coral-bg: #3a1113; /* muted background for fail */
+      --coral-text: #ffe5e4; /* text on coral background */
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Helvetica Neue", "Segoe UI", "Arial", sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    /* Monospace stack for data */
+    .mono {
+      font-family: "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", "Courier New", monospace;
+    }
+
+    header {
+      padding: 1.5rem 2rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .eyebrow {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      opacity: 0.8;
+      color: var(--text-secondary);
+    }
+
+    h1 {
+      margin: 0.25rem 0 0.5rem;
+      font-size: 2rem;
+      color: var(--text-primary);
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    #stats {
+      padding: 1rem 2rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    thead {
+      background: var(--bg);
+    }
+
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    tbody tr:hover {
+      background: var(--bg);
+    }
+
+    /* Panel (detail view) */
+    #panel {
+      display: none; /* hidden by default */
+      margin: 2rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    #panel header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    #panel header .title {
+      font-weight: 600;
+    }
+
+    #panel header button {
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    /* Helper badge classes */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .badge.pass { background: var(--teal-bg); color: var(--teal-text); }
+    .badge.flaky { background: var(--amber-bg); color: var(--amber-text); }
+    .badge.fail { background: var(--coral-bg); color: var(--coral-text); }
+
+    #stats {
+      padding: 1rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 120px;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.375rem;
+      text-align: center;
+    }
+
+    .stat-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); }
+    .stat-value { font-size: 1.5rem; font-weight: bold; color: var(--text-primary); }
+    .stat-card[data-type="stable"] .stat-value { color: var(--teal-base); }
+    .stat-card[data-type="flaky"] .stat-value { color: var(--amber-base); }
+    .stat-card[data-type="bugs"] .stat-value { color: var(--coral-base); }
+
+    @media (max-width: 640px) {
+      #stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        padding: 1rem;
+      }
+      .stat-card {
+        min-width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Dashboard</div>
+    <h1>Flaky test detector</h1>
+    <div class="subtitle">Live view of test stability and AI analysis</div>
+  </header>
+
+  <div id="stats"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Test</th>
+        <th>Run history</th>
+        <th>Score</th>
+        <th>Pass / fail</th>
+        <th>Last run</th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      <!-- rows will be injected by JS -->
+    </tbody>
+    </table>
+
+    <!-- Detail panel -->
+    <div id="panel">
+      <header>
+        <span class="title">Detail view</span>
+        <button aria-label="Close" onclick="closePanel()">✕</button>
+      </header>
+      <div class="content" style="padding:1rem;">
+        <div id="analysis-content"></div>
+      </div>
+    </div>
+
+    <script>
+      // Configuration – set to your backend URL if needed
+      const apiBase = '';
+
+      // Utility helpers
+      const formatScore = score => (score * 100).toFixed(1) + '%';
+      const badgeClassForScore = score => {
+        if (score > 0.5) return 'badge fail';
+        if (score >= 0.2) return 'badge flaky';
+        return 'badge pass';
+      };
+
+      // ---------------------------------------------------------------------
+      // Error analysis helpers
+      // ---------------------------------------------------------------------
+
+      /**
+       * Normalise an error message into a stable "signature":
+       *  1. Strip all digit sequences           ("line 42" → "line ")
+       *  2. Strip parenthetical content          "(x=3, y=7)" → "")
+       *  3. Take text before the first colon     "AssertionError: …" → "AssertionError"
+       *  4. Trim whitespace
+       */
+      function normalizeError(msg) {
+        if (!msg) return '';
+        let s = msg
+          .replace(/\d+/g, '')                // remove digits
+          .replace(/\([^)]*\)/g, '')           // remove (…)
+          .replace(/\[[^\]]*\]/g, '');         // remove […]
+        const colon = s.indexOf(':');
+        if (colon !== -1) s = s.substring(0, colon);
+        return s.trim();
+      }
+
+      /**
+       * Classify an error message by keyword rules.
+       * Returns { category: string, verdict: string }.
+       */
+      function categorize(errMsg) {
+        if (!errMsg) return { category: 'unknown', verdict: 'likely_flaky' };
+        const m = errMsg.toLowerCase();
+
+        // Timing / race-condition indicators
+        if (m.includes('timeout') || m.includes('stale') || m.includes('target closed')) {
+          return { category: 'timing / race condition', verdict: 'likely_flaky' };
+        }
+
+        // UI overlay / environment indicators
+        if (m.includes('click intercepted') || m.includes('not clickable')) {
+          return { category: 'ui overlay / environment', verdict: 'likely_flaky' };
+        }
+
+        // Generic one-off environment hiccup
+        if (m.includes('one-off environment')) {
+          return { category: 'environment', verdict: 'likely_flaky' };
+        }
+
+        // Assertion mentioning specific business terms → genuine regression
+        const businessTerms = [
+          'discount', 'pagination', 'price', 'total', 'balance',
+          'inventory', 'quantity', 'shipping', 'tax', 'subtotal',
+          'order', 'invoice', 'payment', 'cart', 'checkout',
+        ];
+        if (
+          (m.includes('assert') || m.includes('expected') || m.includes('not equal')) &&
+          businessTerms.some(term => m.includes(term))
+        ) {
+          return { category: 'genuine regression', verdict: 'likely_real_bug' };
+        }
+
+        // Fallback
+        return { category: 'unknown', verdict: 'likely_flaky' };
+      }
+
+      // ---------------------------------------------------------------------
+      // Data processing: group raw runs → per-test summaries
+      // ---------------------------------------------------------------------
+      function groupByTest(runs) {
+        const grouped = {};
+        runs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        runs.forEach(r => {
+          if (!grouped[r.test_name]) grouped[r.test_name] = [];
+          grouped[r.test_name].push(r);
+        });
+        return grouped;
+      }
+
+      function flakinessScore(runs) {
+        if (runs.length < 3) return 0;
+        let transitions = 0;
+        for (let i = 1; i < runs.length; i++) {
+          if (runs[i].status !== runs[i - 1].status) transitions++;
+        }
+        return transitions / (runs.length - 1);
+      }
+
+      function buildSummaries(rawRuns) {
+        const groups = groupByTest(rawRuns);
+        const summaries = [];
+        for (const [name, runs] of Object.entries(groups)) {
+          const score = flakinessScore(runs);
+          const passCount = runs.filter(r => r.status === 'pass').length;
+          const failCount = runs.filter(r => r.status === 'fail').length;
+          const total = runs.length;
+          const lastRun = runs[runs.length - 1];
+          const failures = runs.filter(r => r.status === 'fail');
+          const lastFailure = failures.length ? failures[failures.length - 1] : null;
+          summaries.push({ name, runs, score, passCount, failCount, total, lastRun, lastFailure });
+        }
+        summaries.sort((a, b) => b.score - a.score);
+        return summaries;
+      }
+
+      // ---------------------------------------------------------------------
+      // Table rendering & sorting
+      // ---------------------------------------------------------------------
+      let currentSort = { key: 'score', asc: false };
+      let summaries = [];
+
+      function formatTS(ts) {
+        const d = new Date(ts);
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+          + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      function renderRow(s, idx) {
+        const tr = document.createElement('tr');
+        tr.classList.add('mono');
+        tr.tabIndex = 0;
+        tr.dataset.testName = s.name;
+        tr.dataset.index = idx;
+        tr.addEventListener('click', () => openPanel(idx));
+        tr.addEventListener('keydown', e => { if (e.key === 'Enter') openPanel(idx); });
+
+        // 1 · Test name
+        const tdName = document.createElement('td');
+        tdName.textContent = s.name;
+        tr.appendChild(tdName);
+
+        // 2 · Run history — last 14 runs as small colored rectangles
+        const tdHistory = document.createElement('td');
+        const strip = document.createElement('div');
+        strip.className = 'run-strip';
+        const recent = s.runs.slice(-14);
+        recent.forEach(r => {
+          const dot = document.createElement('span');
+          dot.className = r.status === 'pass' ? 'run-dot pass' : 'run-dot fail';
+          dot.title = `${r.status.toUpperCase()} — ${formatTS(r.timestamp)}`;
+          strip.appendChild(dot);
+        });
+        tdHistory.appendChild(strip);
+        tr.appendChild(tdHistory);
+
+        // 3 · Score badge (monospace, color-coded)
+        const tdScore = document.createElement('td');
+        const badge = document.createElement('span');
+        badge.className = badgeClassForScore(s.score) + ' mono';
+        badge.textContent = formatScore(s.score);
+        tdScore.appendChild(badge);
+        tr.appendChild(tdScore);
+
+        // 4 · Pass / fail counts + last failure timestamp
+        const tdPF = document.createElement('td');
+        const lastFailStr = s.lastFailure ? formatTS(s.lastFailure.timestamp) : '—';
+        tdPF.innerHTML =
+          `<span style="color:var(--teal-base)">${s.passCount}</span>` +
+          `<span style="color:var(--text-muted)"> / </span>` +
+          `<span style="color:var(--coral-base)">${s.failCount}</span>` +
+          `<span style="color:var(--text-muted);font-size:0.8em;margin-left:0.5em">${lastFailStr}</span>`;
+        tr.appendChild(tdPF);
+
+        // 5 · Last run timestamp
+        const tdLast = document.createElement('td');
+        tdLast.textContent = formatTS(s.lastRun.timestamp);
+        tr.appendChild(tdLast);
+
+        return tr;
+      }
+
+      // ---------------------------------------------------------------------
+      // Stat cards
+      // ---------------------------------------------------------------------
+      function renderStats() {
+        const stats = document.getElementById('stats');
+        stats.innerHTML = '';
+        const total = summaries.length;
+        const flaky = summaries.filter(s =>
+          s.score >= 0.2 && s.passCount > 0 && s.failCount > 0
+        ).length;
+        const stable = summaries.filter(s =>
+          s.score < 0.2 && s.failCount === 0
+        ).length;
+        const bugs = summaries.filter(s =>
+          s.failCount === s.total && s.total > 0
+        ).length;
+
+        const cards = [
+          { label: 'Tests Monitored', value: total, type: 'total' },
+          { label: 'Flaky',           value: flaky, type: 'flaky' },
+          { label: 'Stable',          value: stable, type: 'stable' },
+          { label: 'Real Bugs',       value: bugs,  type: 'bugs' },
+        ];
+
+        cards.forEach(c => {
+          const card = document.createElement('div');
+          card.className = 'stat-card';
+          card.dataset.type = c.type;
+          card.innerHTML =
+            `<div class="stat-label">${c.label}</div>` +
+            `<div class="stat-value mono">${c.value}</div>`;
+          stats.appendChild(card);
+        });
+      }
+
+      let allRawRuns = [];
+      const EMBEDDED_RUNS = [
+  {
+    "test_name": "test_stable_pass_10",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:27:05.166356Z",
+    "duration_ms": 4239,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "30a900ad939b462de645f129629c2ae31d9af659"
+  },
+  {
+    "test_name": "test_stable_pass_12",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:31:43.166356Z",
+    "duration_ms": 2048,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "e4855aa1016b6287b00805cca7f36ae925c73c44"
+  },
+  {
+    "test_name": "test_stable_pass_3",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:12:28.166356Z",
+    "duration_ms": 630,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "7c441fe7ab4220a7474a493b3ceddf2d839fbc50"
+  },
+  {
+    "test_name": "test_stable_pass_5",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:16:24.166356Z",
+    "duration_ms": 2619,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "80bacd647a0ecfea958ca9ba0cd620c20ea2622b"
+  },
+  {
+    "test_name": "test_stable_pass_1",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:10:01.166356Z",
+    "duration_ms": 54,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "1ca35cfb04fc6d827d15438552fbe43b99546eb4"
+  },
+  {
+    "test_name": "test_consistent_fail_1",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:33:09.166356Z",
+    "duration_ms": 4927,
+    "error_message": "ValueError: invalid input data",
+    "stack_trace": null,
+    "commit_sha": "714c7df4e4347d51c1581092f335cba3513a7052"
+  },
+  {
+    "test_name": "test_stable_pass_6",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:19:22.166356Z",
+    "duration_ms": 613,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "286218b848f4ef125e9953d23e896c64e117dac3"
+  },
+  {
+    "test_name": "test_stable_pass_9",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:25:30.166356Z",
+    "duration_ms": 2550,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "391184973a43b2badf0f06cbcb9bc326d20eac17"
+  },
+  {
+    "test_name": "test_stable_pass_1",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:09:40.166356Z",
+    "duration_ms": 3113,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "c754108ff4188f3f8a14be62295b4715c333e861"
+  },
+  {
+    "test_name": "test_stable_pass_2",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:10:53.166356Z",
+    "duration_ms": 4413,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "79ac1b1ea8e56e0c20de435d2031d750c40db9b4"
+  },
+  {
+    "test_name": "test_stable_pass_9",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:26:39.166356Z",
+    "duration_ms": 1512,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "09cb394243f59a85fbc9f87af668a61794a1875d"
+  },
+  {
+    "test_name": "test_stable_pass_2",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:11:26.166356Z",
+    "duration_ms": 4467,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "b683d2e6337ea2dfb09b2a5cbadcc32ac1590f53"
+  },
+  {
+    "test_name": "test_flaky_3",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:05:29.166356Z",
+    "duration_ms": 2243,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "9132b63ef16287e4e9c349e03602f8ac10f1bc81"
+  },
+  {
+    "test_name": "test_stable_pass_7",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:22:28.166356Z",
+    "duration_ms": 4569,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "1ca3c4480279b6a68f9797b06d7ce3c9b4a69f3c"
+  },
+  {
+    "test_name": "test_stable_pass_8",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:23:53.166356Z",
+    "duration_ms": 892,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "dfed2c43e256a6dc8f5486b7c7b5b2bc5a8aaeca"
+  },
+  {
+    "test_name": "test_stable_pass_11",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:30:27.166356Z",
+    "duration_ms": 744,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "9e87e04ca2086977a9f2533683f4a9a948a639d0"
+  },
+  {
+    "test_name": "test_stable_pass_11",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:30:17.166356Z",
+    "duration_ms": 3926,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "bc67f831cbc84759f5b78cc7e6b3c944cb323e35"
+  },
+  {
+    "test_name": "test_stable_pass_12",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:30:56.166356Z",
+    "duration_ms": 1890,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "0bd4a9900640be0f25b8fd4b32fa2de8ce7ae7f6"
+  },
+  {
+    "test_name": "test_consistent_fail_2",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:34:33.166356Z",
+    "duration_ms": 2801,
+    "error_message": "ValueError: invalid input data",
+    "stack_trace": null,
+    "commit_sha": "236c7b8714a0bccb8a476a87e49d681d51d87c64"
+  },
+  {
+    "test_name": "test_stable_pass_2",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:11:15.166356Z",
+    "duration_ms": 1402,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "6c52c49f9b49bd26df57c59a8715a10343dac043"
+  },
+  {
+    "test_name": "test_flaky_4",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:07:53.166356Z",
+    "duration_ms": 3176,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "405cacec877409a977d21e02ff01cf99988c24c9"
+  },
+  {
+    "test_name": "test_stable_pass_9",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:25:35.166356Z",
+    "duration_ms": 1632,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "11c58ef0dd463c09475287aa5408f9ac6601ddd0"
+  },
+  {
+    "test_name": "test_stable_pass_1",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:09:23.166356Z",
+    "duration_ms": 2207,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "81f76d1c2dbc2134c30ff46e8026695ff8cda88b"
+  },
+  {
+    "test_name": "test_stable_pass_6",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:18:51.166356Z",
+    "duration_ms": 2507,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "ef8c485bc07a30f2edd4253b50f0fd0a750cab75"
+  },
+  {
+    "test_name": "test_flaky_3",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:05:56.166356Z",
+    "duration_ms": 2627,
+    "error_message": "AssertionError: expected True but got False",
+    "stack_trace": null,
+    "commit_sha": "e27a984d654821d07fcd9eb1a7cad415366eb16f"
+  },
+  {
+    "test_name": "test_stable_pass_4",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:15:04.166356Z",
+    "duration_ms": 1986,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "36b824817b3a4e3e7c52fa17680ac07a2a935d62"
+  },
+  {
+    "test_name": "test_flaky_2",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:03:11.166356Z",
+    "duration_ms": 1916,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "daf61a26146d3f31fc377a4c4a15544dc5e7ce8a"
+  },
+  {
+    "test_name": "test_stable_pass_6",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:18:26.166356Z",
+    "duration_ms": 2623,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "abf3e3fc21813d25655238a643ff50113d1a85dd"
+  },
+  {
+    "test_name": "test_stable_pass_7",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:20:37.166356Z",
+    "duration_ms": 898,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "1d8cbbac43b409ef2260e70fe0ccedc5f05db76e"
+  },
+  {
+    "test_name": "test_stable_pass_3",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:13:31.166356Z",
+    "duration_ms": 3875,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "a748dbcfac619e630dde29a6baa4b71add2467ac"
+  },
+  {
+    "test_name": "test_stable_pass_11",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:30:42.166356Z",
+    "duration_ms": 815,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "ac3c56403c20592fc04a96c4f3b63fe1d1843324"
+  },
+  {
+    "test_name": "test_flaky_2",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:03:39.166356Z",
+    "duration_ms": 1382,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "4458a885ab9099a435a240ae5af305535ec42e08"
+  },
+  {
+    "test_name": "test_consistent_fail_2",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:34:49.166356Z",
+    "duration_ms": 3448,
+    "error_message": "ValueError: invalid input data",
+    "stack_trace": null,
+    "commit_sha": "6a702e2f7746d0ba8ae8905b54b4a48268586eba"
+  },
+  {
+    "test_name": "test_stable_pass_9",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:25:08.166356Z",
+    "duration_ms": 2235,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "61ee411a1bac27a7b386f7a4c991603f28c13091"
+  },
+  {
+    "test_name": "test_flaky_2",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:02:13.166356Z",
+    "duration_ms": 2216,
+    "error_message": "StaleElementReferenceException",
+    "stack_trace": null,
+    "commit_sha": "89463e85759cde66bacfb3d00b1f9163ce9ff57f"
+  },
+  {
+    "test_name": "test_stable_pass_2",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:12:01.166356Z",
+    "duration_ms": 3748,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "568cc69b1064005c3985c3cf3f76be1d1efa2197"
+  },
+  {
+    "test_name": "test_flaky_2",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:02:21.166356Z",
+    "duration_ms": 3150,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "a0ee89aed453dd324b0dbb418d5288f1142c3fe8"
+  },
+  {
+    "test_name": "test_stable_pass_2",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:12:06.166356Z",
+    "duration_ms": 4869,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "01d7425638602ab696a402f23ae8cc938dcdcd03"
+  },
+  {
+    "test_name": "test_flaky_2",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:03:23.166356Z",
+    "duration_ms": 877,
+    "error_message": "StaleElementReferenceException",
+    "stack_trace": null,
+    "commit_sha": "d58842dea2bc372f7412b29347294739614ff3d7"
+  },
+  {
+    "test_name": "test_flaky_3",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:04:18.166356Z",
+    "duration_ms": 1388,
+    "error_message": "AssertionError: expected True but got False",
+    "stack_trace": null,
+    "commit_sha": "ece66fa2fd5166e6451b4cf36123fdf77656af72"
+  },
+  {
+    "test_name": "test_consistent_fail_1",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:33:43.166356Z",
+    "duration_ms": 3938,
+    "error_message": "ValueError: invalid input data",
+    "stack_trace": null,
+    "commit_sha": "d701410d3f4b1a70c074718e425a609f7337c599"
+  },
+  {
+    "test_name": "test_stable_pass_12",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:32:47.166356Z",
+    "duration_ms": 3789,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "87f8424daae65fc176f2dbfecd29a36f222282e1"
+  },
+  {
+    "test_name": "test_stable_pass_3",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:13:02.166356Z",
+    "duration_ms": 3922,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "683514f2ceb81f9d7914c120c8dcd19f3e351128"
+  },
+  {
+    "test_name": "test_flaky_1",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:00:56.166356Z",
+    "duration_ms": 4514,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "4737819096da1dac72ff5d2a386ecbe06b65a6a4"
+  },
+  {
+    "test_name": "test_stable_pass_6",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:18:58.166356Z",
+    "duration_ms": 126,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "ff002d4d902059e4ff9ab5c29f044aed75523327"
+  },
+  {
+    "test_name": "test_flaky_3",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:04:06.166356Z",
+    "duration_ms": 634,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "baa80dd488bd64072bcfbe01a28defe39bf00273"
+  },
+  {
+    "test_name": "test_flaky_4",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:07:06.166356Z",
+    "duration_ms": 3321,
+    "error_message": "ConnectionError: failed to connect to server",
+    "stack_trace": null,
+    "commit_sha": "2369b584ff5e9ff0ff50bde4382567b85cabcc97"
+  },
+  {
+    "test_name": "test_consistent_fail_1",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:33:33.166356Z",
+    "duration_ms": 4185,
+    "error_message": "ValueError: invalid input data",
+    "stack_trace": null,
+    "commit_sha": "722764e68c41561be827a1b9d4a02e536d3ee1dc"
+  },
+  {
+    "test_name": "test_stable_pass_10",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:26:47.166356Z",
+    "duration_ms": 4937,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "504d281fc9535b63ba81edd9587ef3446f3f920c"
+  },
+  {
+    "test_name": "test_stable_pass_3",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:13:56.166356Z",
+    "duration_ms": 856,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "ccf3a17156dc8907ba6c34ab6712303a0f844fef"
+  },
+  {
+    "test_name": "test_flaky_1",
+    "status": "fail",
+    "timestamp": "2026-08-07T02:59:45.166356Z",
+    "duration_ms": 889,
+    "error_message": "TimeoutException: element not clickable",
+    "stack_trace": null,
+    "commit_sha": "16419f828b9d2434e465e150bd9c66b3ad3c2d6d"
+  },
+  {
+    "test_name": "test_stable_pass_1",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:09:31.166356Z",
+    "duration_ms": 2494,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "32ebd6899be578c781f631d4a39231a7d777a477"
+  },
+  {
+    "test_name": "test_flaky_1",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:01:26.166356Z",
+    "duration_ms": 103,
+    "error_message": "TimeoutException: element not clickable",
+    "stack_trace": null,
+    "commit_sha": "6c307511b2b9437a28df6ec4ce4a2bbdc241330b"
+  },
+  {
+    "test_name": "test_stable_pass_8",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:24:11.166356Z",
+    "duration_ms": 1316,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "2999b735dd56cc943c9ad14cee0caeb5ecfedb99"
+  },
+  {
+    "test_name": "test_consistent_fail_2",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:34:42.166356Z",
+    "duration_ms": 1944,
+    "error_message": "ValueError: invalid input data",
+    "stack_trace": null,
+    "commit_sha": "36c59dacb4d7e28e271e3ee2b1a6b1f1620e99d3"
+  },
+  {
+    "test_name": "test_stable_pass_11",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:29:32.166356Z",
+    "duration_ms": 2539,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "9479e1e6c9277d9b6e0d264835ce884149732d6c"
+  },
+  {
+    "test_name": "test_stable_pass_5",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:17:12.166356Z",
+    "duration_ms": 1032,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "94340a033f07f81491d63f78e3e9de99f10c718b"
+  },
+  {
+    "test_name": "test_stable_pass_7",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:20:45.166356Z",
+    "duration_ms": 4582,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "35ebd32d9ad620ab48212ddb45b89cd927cb6f2a"
+  },
+  {
+    "test_name": "test_flaky_4",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:07:36.166356Z",
+    "duration_ms": 1360,
+    "error_message": "ConnectionError: failed to connect to server",
+    "stack_trace": null,
+    "commit_sha": "10435a1098ae43346c12ace8ae340454cac5b68c"
+  },
+  {
+    "test_name": "test_stable_pass_5",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:16:18.166356Z",
+    "duration_ms": 1833,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "8acd4e10bc594585944528c00ef8c2d6f7fd5646"
+  },
+  {
+    "test_name": "test_stable_pass_6",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:19:06.166356Z",
+    "duration_ms": 650,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "21e8ac6843e42caf8181a8cc369147eb89a2688b"
+  },
+  {
+    "test_name": "test_stable_pass_8",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:24:56.166356Z",
+    "duration_ms": 3422,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "cf8d446abc2cbb0ddd334cc7ab7f089acd5f4822"
+  },
+  {
+    "test_name": "test_flaky_3",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:06:21.166356Z",
+    "duration_ms": 3808,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "beb799193f22faf823bed01d43cf2fde24933b83"
+  },
+  {
+    "test_name": "test_stable_pass_5",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:16:45.166356Z",
+    "duration_ms": 1339,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "d9f195d014822f5382010c62f5f59b220e8fa8e0"
+  },
+  {
+    "test_name": "test_flaky_4",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:08:37.166356Z",
+    "duration_ms": 2235,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "4b22d3081c8eaee95715bd6fa4161293c4c2e2e3"
+  },
+  {
+    "test_name": "test_stable_pass_2",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:12:13.166356Z",
+    "duration_ms": 532,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "dc1110c1080aadfbe7c99b26114125c63a9bedd4"
+  },
+  {
+    "test_name": "test_stable_pass_12",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:31:26.166356Z",
+    "duration_ms": 4765,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "7e8f8095624c69b6b24445a7b7e5848131c681ec"
+  },
+  {
+    "test_name": "test_stable_pass_1",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:10:17.166356Z",
+    "duration_ms": 2569,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "913e4de2e0c53cb83da9c2a90ed42f1a3d4cbf37"
+  },
+  {
+    "test_name": "test_flaky_1",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:01:41.166356Z",
+    "duration_ms": 2326,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "562b0f79c37459eef50bea63371ecd7b27cd8130"
+  },
+  {
+    "test_name": "test_flaky_4",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:07:27.166356Z",
+    "duration_ms": 4092,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "1c11f735dc713d960c0fd195c17af08a1745d6d8"
+  },
+  {
+    "test_name": "test_stable_pass_8",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:24:41.166356Z",
+    "duration_ms": 1500,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "bc8f7d292dea94930658663a698c206fe1a47e10"
+  },
+  {
+    "test_name": "test_flaky_3",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:05:12.166356Z",
+    "duration_ms": 508,
+    "error_message": "AssertionError: expected True but got False",
+    "stack_trace": null,
+    "commit_sha": "50c187fcce177b4e0837b8a3d261a7ab3aa2e4f9"
+  },
+  {
+    "test_name": "test_stable_pass_4",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:15:34.166356Z",
+    "duration_ms": 3777,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "bb026576f512c4c3b253d2186c4a37ea490617f2"
+  },
+  {
+    "test_name": "test_flaky_2",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:02:45.166356Z",
+    "duration_ms": 3012,
+    "error_message": "StaleElementReferenceException",
+    "stack_trace": null,
+    "commit_sha": "0bbb259911ce5dd2b45ed1f03139d32c93cd59bf"
+  },
+  {
+    "test_name": "test_stable_pass_8",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:22:57.166356Z",
+    "duration_ms": 1263,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "5d59cd2a4eea04e70ab54bde20a045026e068097"
+  },
+  {
+    "test_name": "test_stable_pass_7",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:21:12.166356Z",
+    "duration_ms": 2858,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "439472e6da587e8aa25d6b29afffcfd2341ef40b"
+  },
+  {
+    "test_name": "test_stable_pass_7",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:22:09.166356Z",
+    "duration_ms": 1121,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "bdc14f1f295d6fbf430f801dfad409e2a319dcb4"
+  },
+  {
+    "test_name": "test_stable_pass_4",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:14:29.166356Z",
+    "duration_ms": 3680,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "19108be58ce21ea3db20a56edc815fe7ceda8bbb"
+  },
+  {
+    "test_name": "test_stable_pass_9",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:26:04.166356Z",
+    "duration_ms": 2336,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "adf4e62d6651529e8268690ba43825b559e4b671"
+  },
+  {
+    "test_name": "test_stable_pass_11",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:29:27.166356Z",
+    "duration_ms": 1475,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "8c459ce267f48ad54d0b0d1a91b0e1d99d9262af"
+  },
+  {
+    "test_name": "test_stable_pass_8",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:23:27.166356Z",
+    "duration_ms": 376,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "3fe12e47ae9bec3635c7936c5b9962c6e61fecc0"
+  },
+  {
+    "test_name": "test_flaky_3",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:04:43.166356Z",
+    "duration_ms": 4612,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "c4b032ccd7c524a55304317faf42e12f3838b326"
+  },
+  {
+    "test_name": "test_stable_pass_5",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:16:55.166356Z",
+    "duration_ms": 611,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "3c365296dca02eecacdabacc1165e21098543881"
+  },
+  {
+    "test_name": "test_flaky_4",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:06:43.166356Z",
+    "duration_ms": 4465,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "e5d7b8756dadd6c795a76d79bf3c4c06434308bc"
+  },
+  {
+    "test_name": "test_stable_pass_4",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:14:35.166356Z",
+    "duration_ms": 4478,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "ed2662e917e011b7f810238303c72ba8d605e770"
+  },
+  {
+    "test_name": "test_stable_pass_9",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:25:14.166356Z",
+    "duration_ms": 3905,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "75d66ed4eb1fa9f2d10bd1d03317347038f16a81"
+  },
+  {
+    "test_name": "test_stable_pass_3",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:12:39.166356Z",
+    "duration_ms": 4467,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "922fe15ae1e3db63ef7ddc76b92da22b21df306f"
+  },
+  {
+    "test_name": "test_stable_pass_11",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:29:56.166356Z",
+    "duration_ms": 2689,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "36b5229aacf5e81e713162697118e36477097749"
+  },
+  {
+    "test_name": "test_flaky_1",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:00:29.166356Z",
+    "duration_ms": 4981,
+    "error_message": "TimeoutException: element not clickable",
+    "stack_trace": null,
+    "commit_sha": "a65ed389b74d0fb132e706298fadc1a606cb0fb3"
+  },
+  {
+    "test_name": "test_stable_pass_10",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:27:18.166356Z",
+    "duration_ms": 413,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "ecf27e7685197ff4006ed6e36fa17735b572f3d0"
+  },
+  {
+    "test_name": "test_stable_pass_4",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:16:04.166356Z",
+    "duration_ms": 4602,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "309d258c27a0c3d77c967f79b7e99acaa97065e1"
+  },
+  {
+    "test_name": "test_stable_pass_1",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:10:24.166356Z",
+    "duration_ms": 751,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "fa5d310011b7e948d0e6e6607c69dee1bb5e4bcf"
+  },
+  {
+    "test_name": "test_stable_pass_12",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:32:39.166356Z",
+    "duration_ms": 4293,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "eadf50853fcb75468eb225790cdb1ca476ecbdd6"
+  },
+  {
+    "test_name": "test_stable_pass_5",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:17:59.166356Z",
+    "duration_ms": 4332,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "ab73295b344a54b842c18a62ef48e8d550fd9d3f"
+  },
+  {
+    "test_name": "test_stable_pass_1",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:08:55.166356Z",
+    "duration_ms": 1345,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "e037e5edb8db0672f42d47cc00d4af5974273ca3"
+  },
+  {
+    "test_name": "test_stable_pass_8",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:22:35.166356Z",
+    "duration_ms": 1271,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "951f58d05e84f058d5a804eb093923de8babce3b"
+  },
+  {
+    "test_name": "test_stable_pass_6",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:20:11.166356Z",
+    "duration_ms": 4383,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "4ca415ea8dfa6a56d12dbc9aaaf915310200b1f0"
+  },
+  {
+    "test_name": "test_stable_pass_10",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:27:48.166356Z",
+    "duration_ms": 4460,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "bcae8081bdf070aaf0b5156bb82c9074afd5dea5"
+  },
+  {
+    "test_name": "test_stable_pass_10",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:28:14.166356Z",
+    "duration_ms": 1664,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "aa0b7b14f2e9702d11e9cdaa6e6981a35d3d9e56"
+  },
+  {
+    "test_name": "test_stable_pass_6",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:19:41.166356Z",
+    "duration_ms": 4500,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "fcbb4e59fbddcf7c9c96e9ec4d71c366b41b3143"
+  },
+  {
+    "test_name": "test_consistent_fail_2",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:34:20.166356Z",
+    "duration_ms": 2299,
+    "error_message": "ValueError: invalid input data",
+    "stack_trace": null,
+    "commit_sha": "3c07c57449257af1b6aae05b13d5f2f7709b7d97"
+  },
+  {
+    "test_name": "test_consistent_fail_1",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:34:08.166356Z",
+    "duration_ms": 2321,
+    "error_message": "ValueError: invalid input data",
+    "stack_trace": null,
+    "commit_sha": "a07295e97c0e8cd88573e793c715b2b9c40c5d91"
+  },
+  {
+    "test_name": "test_stable_pass_10",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:28:29.166356Z",
+    "duration_ms": 2621,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "e6697833b841d0a01fe771d6d9178793a9d3c2e6"
+  },
+  {
+    "test_name": "test_stable_pass_2",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:11:40.166356Z",
+    "duration_ms": 3318,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "702753a15f987c71a65e688eabf3ad39fec21bbe"
+  },
+  {
+    "test_name": "test_stable_pass_3",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:13:13.166356Z",
+    "duration_ms": 822,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "6c6fa6115ab33edf6e595ed3a8b317fa18d0752b"
+  },
+  {
+    "test_name": "test_flaky_1",
+    "status": "pass",
+    "timestamp": "2026-08-07T02:59:36.166356Z",
+    "duration_ms": 962,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "392456de3eb13b9046685257bdd640fb06671ad1"
+  },
+  {
+    "test_name": "test_stable_pass_5",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:17:36.166356Z",
+    "duration_ms": 375,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "956b8c0ca8499b926b5252e314fcdd549e8fc965"
+  },
+  {
+    "test_name": "test_stable_pass_3",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:14:04.166356Z",
+    "duration_ms": 2086,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "23e2fcb472d8567d894a05e430b187ef310c0c00"
+  },
+  {
+    "test_name": "test_stable_pass_7",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:21:33.166356Z",
+    "duration_ms": 4052,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "0d01280fd89a40c0e87d1c78e7c421c740497b71"
+  },
+  {
+    "test_name": "test_stable_pass_10",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:28:43.166356Z",
+    "duration_ms": 4204,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "6703b6365380b904688c7015aab97e494f2d4796"
+  },
+  {
+    "test_name": "test_stable_pass_12",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:32:12.166356Z",
+    "duration_ms": 923,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "cdda24ba2d06e8cf3805f9076cd66193c7468f59"
+  },
+  {
+    "test_name": "test_flaky_1",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:00:08.166356Z",
+    "duration_ms": 3506,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "3b8faa1837f8a88b17fc695a07a0ca6e0822e8f3"
+  },
+  {
+    "test_name": "test_stable_pass_9",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:26:26.166356Z",
+    "duration_ms": 2762,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "f86c2ca2e08596db1d8709660710d430f071d879"
+  },
+  {
+    "test_name": "test_stable_pass_7",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:21:40.166356Z",
+    "duration_ms": 3519,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "5563f61600e85ece0b49452d46d483f3d450281c"
+  },
+  {
+    "test_name": "test_stable_pass_11",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:29:10.166356Z",
+    "duration_ms": 2472,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "aa38d0a16ba25efe311c6eb62095eef68dedf9fb"
+  },
+  {
+    "test_name": "test_stable_pass_4",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:14:22.166356Z",
+    "duration_ms": 1553,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "ec5b227cdfde4fbf3ff350bf766ecb15474ebc19"
+  },
+  {
+    "test_name": "test_stable_pass_4",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:15:21.166356Z",
+    "duration_ms": 530,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "63f2ae24fc3d3348008d4127610461e32a25a888"
+  },
+  {
+    "test_name": "test_stable_pass_12",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:31:08.166356Z",
+    "duration_ms": 3942,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "7496276412a4def0c4bbb7a9d98868dd9c7c7377"
+  },
+  {
+    "test_name": "test_flaky_4",
+    "status": "fail",
+    "timestamp": "2026-08-07T03:08:15.166356Z",
+    "duration_ms": 144,
+    "error_message": "ConnectionError: failed to connect to server",
+    "stack_trace": null,
+    "commit_sha": "e2817efdae8492171d53434bb88139b9ae270da7"
+  },
+  {
+    "test_name": "test_flaky_2",
+    "status": "pass",
+    "timestamp": "2026-08-07T03:01:49.166356Z",
+    "duration_ms": 809,
+    "error_message": null,
+    "stack_trace": null,
+    "commit_sha": "580d7b71d8f564135be6128e18c267976142ea7d"
+  }
+];
+
+      async function loadData() {
+        try {
+          const resp = await fetch('data/sample_test_runs.json');
+          if (!resp.ok) throw new Error('Failed to load sample data');
+          const rawRuns = await resp.json();
+          allRawRuns = rawRuns;
+          summaries = buildSummaries(rawRuns);
+          applySortingAndRender();
+          renderStats();
+        } catch (e) {
+          console.warn('Network fetch failed or CORS blocked. Falling back to embedded local data.', e);
+          allRawRuns = EMBEDDED_RUNS;
+          summaries = buildSummaries(allRawRuns);
+          applySortingAndRender();
+          renderStats();
+        }
+      }
+
+      function applySortingAndRender() {
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+        const sortKey = currentSort.key;
+        const sorted = [...summaries].sort((a, b) => {
+          const valA = a[sortKey];
+          const valB = b[sortKey];
+          if (valA < valB) return currentSort.asc ? -1 : 1;
+          if (valA > valB) return currentSort.asc ? 1 : -1;
+          return 0;
+        });
+        sorted.forEach((s, i) => {
+          tbody.appendChild(renderRow(s, i));
+        });
+        selectedRowIndex = -1;
+      }
+
+      // ---------------------------------------------------------------------
+      // Column header click → sort
+      // ---------------------------------------------------------------------
+      function initHeaderSorting() {
+        const headerRow = document.querySelector('thead tr');
+        const keys = ['test_name', 'total_runs', 'flakiness_score', 'flakiness_score', 'last_run'];
+        headerRow.querySelectorAll('th').forEach((th, idx) => {
+          th.style.cursor = 'pointer';
+          th.addEventListener('click', () => {
+            const key = keys[idx];
+            if (currentSort.key === key) {
+              currentSort.asc = !currentSort.asc;
+            } else {
+              currentSort.key = key;
+              currentSort.asc = true;
+            }
+            applySortingAndRender();
+          });
+        });
+      }
+
+      // ---------------------------------------------------------------------
+      // Keyboard navigation
+      // ---------------------------------------------------------------------
+      let selectedRowIndex = -1;
+      function updateRowSelection() {
+        const rows = document.querySelectorAll('#table-body tr');
+        rows.forEach((r, i) => {
+          r.classList.toggle('selected', i === selectedRowIndex);
+          if (i === selectedRowIndex) r.focus();
+        });
+      }
+
+      document.addEventListener('keydown', e => {
+        const rows = document.querySelectorAll('#table-body tr');
+        if (!rows.length) return;
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          selectedRowIndex = Math.min(selectedRowIndex + 1, rows.length - 1);
+          updateRowSelection();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          selectedRowIndex = Math.max(selectedRowIndex - 1, 0);
+          updateRowSelection();
+        } else if (e.key === 'Enter' && selectedRowIndex >= 0) {
+          openPanel(selectedRowIndex);
+        } else if (e.key === 'Escape') {
+          closePanel();
+        }
+      });
+
+      // ---------------------------------------------------------------------
+      // Detail View Panel (openPanel)
+      // ---------------------------------------------------------------------
+      function openPanel(idx) {
+        const rows = document.querySelectorAll('#table-body tr');
+        rows.forEach((r, i) => r.classList.toggle('selected', i === idx));
+        selectedRowIndex = idx;
+
+        const targetRow = rows[idx];
+        if (!targetRow) return;
+        const testName = targetRow.dataset.testName;
+        const s = summaries.find(item => item.name === testName);
+        if (!s) return;
+
+        const panel = document.getElementById('panel');
+        const container = document.getElementById('analysis-content');
+        container.innerHTML = '';
+
+        // 1. Panel header title
+        const panelTitle = document.querySelector('#panel header .title');
+        if (panelTitle) panelTitle.textContent = s.name;
+
+        // 2. Empty-state if zero failures
+        const failureRuns = s.runs.filter(r => r.status === 'fail');
+        if (failureRuns.length === 0) {
+          container.innerHTML = `
+            <div style="padding:1rem;color:var(--teal-base);font-weight:600;">
+              ✓ All ${s.total} runs passed cleanly! No failure history recorded for this test.
+            </div>
+          `;
+          panel.style.display = 'block';
+          return;
+        }
+
+        // 3. Most recent failure, normalized error, and categorization
+        const latestFail = failureRuns[failureRuns.length - 1];
+        const primaryError = latestFail.error_message || 'Unknown error message';
+        const signature = normalizeError(primaryError);
+        let { category, verdict } = categorize(primaryError);
+
+        // Override: 100% failure rate with no passes → genuine bug, not flakiness
+        if (s.passCount === 0 && s.failCount === s.total && s.total > 0) {
+          verdict = 'likely_real_bug';
+          if (category === 'unknown') category = 'consistent failure';
+        }
+
+
+        // 4. Search across ENTIRE runs dataset for similar failures (cap at 5)
+        const similarFailures = [];
+        for (const run of allRawRuns) {
+          if (run.status === 'fail' && run.error_message) {
+            if (normalizeError(run.error_message) === signature) {
+              similarFailures.push(run);
+              if (similarFailures.length >= 5) break;
+            }
+          }
+        }
+
+        // 5. Render verdict pill and category pill
+        const pillsDiv = document.createElement('div');
+        pillsDiv.style.display = 'flex';
+        pillsDiv.style.alignItems = 'center';
+        pillsDiv.style.gap = '0.75rem';
+        pillsDiv.style.marginBottom = '1rem';
+
+        const verdictPill = document.createElement('span');
+        const isFlaky = verdict === 'likely_flaky';
+        verdictPill.className = isFlaky ? 'badge flaky' : 'badge fail';
+        verdictPill.textContent = isFlaky ? 'likely flaky' : 'likely real bug';
+
+        const categoryPill = document.createElement('span');
+        categoryPill.className = 'badge';
+        categoryPill.style.background = 'var(--border)';
+        categoryPill.style.color = 'var(--text-primary)';
+        categoryPill.textContent = category;
+
+        pillsDiv.appendChild(verdictPill);
+        pillsDiv.appendChild(categoryPill);
+        container.appendChild(pillsDiv);
+
+        // 6. Render 2-3 sentence explanation
+        const explP = document.createElement('p');
+        explP.style.color = 'var(--text-secondary)';
+        explP.style.lineHeight = '1.6';
+        explP.style.marginBottom = '1rem';
+
+        if (isFlaky) {
+          explP.textContent = `Found ${similarFailures.length} matching failure(s) with this signature across the test suite. The flakiness score of ${formatScore(s.score)} alongside status transitions indicates non-deterministic behavior rather than a persistent code defect.`;
+        } else {
+          explP.textContent = `This test has failed 100% of its runs (${s.failCount}/${s.total}) with an identical error signature. The consistent failure pattern points to a genuine regression or broken system dependency.`;
+        }
+        container.appendChild(explP);
+
+        // 7. Render one-line suggested next step
+        const nextStepP = document.createElement('p');
+        nextStepP.style.padding = '0.75rem 1rem';
+        nextStepP.style.borderRadius = '0.25rem';
+        nextStepP.style.background = 'var(--bg)';
+        nextStepP.style.borderLeft = '3px solid ' + (isFlaky ? 'var(--amber-base)' : 'var(--coral-base)');
+        nextStepP.style.fontSize = '0.9rem';
+        nextStepP.style.marginBottom = '1.25rem';
+
+        let nextStepText = 'Inspect detailed stack trace and isolate test execution environment.';
+        if (category === 'timing / race condition') {
+          nextStepText = 'Add explicit wait or retry wrapper to stabilize async assertions.';
+        } else if (category === 'ui overlay / environment') {
+          nextStepText = 'Check for blocking overlay, z-index stack, or animation timing.';
+        } else if (category === 'environment') {
+          nextStepText = 'Check test environment setup, network stability, or host hiccup.';
+        } else if (category === 'genuine regression') {
+          nextStepText = 'Investigate underlying business logic changes and recent code commits.';
+        }
+        nextStepP.innerHTML = `<strong>Suggested Next Step:</strong> ${nextStepText}`;
+        container.appendChild(nextStepP);
+
+        // 8. List similar failures found in step 4
+        const listTitle = document.createElement('h4');
+        listTitle.style.marginBottom = '0.5rem';
+        listTitle.textContent = `Similar Failures Across Suite (${similarFailures.length})`;
+        container.appendChild(listTitle);
+
+        const ul = document.createElement('ul');
+        ul.style.paddingLeft = '1.2rem';
+        ul.style.color = 'var(--text-secondary)';
+        ul.style.fontSize = '0.85rem';
+
+        similarFailures.forEach(f => {
+          const li = document.createElement('li');
+          li.style.marginBottom = '0.35rem';
+          li.innerHTML = `<strong>${f.test_name}</strong> &mdash; ${formatTS(f.timestamp)}`;
+          ul.appendChild(li);
+        });
+        container.appendChild(ul);
+
+        // 9. Show the panel
+        panel.style.display = 'block';
+      }
+
+      function closePanel() {
+        document.getElementById('panel').style.display = 'none';
+        const rows = document.querySelectorAll('#table-body tr');
+        rows.forEach(r => r.classList.remove('selected'));
+        selectedRowIndex = -1;
+      }
+
+      // ---------------------------------------------------------------------
+      // Initialisation
+      // ---------------------------------------------------------------------
+      document.addEventListener('DOMContentLoaded', () => {
+        loadData();
+        initHeaderSorting();
+      });
+    </script>
+
+    <style>
+      /* Row hover & selection animation */
+      tbody tr { transition: background-color 0.2s ease; }
+      tbody tr:hover { background: var(--bg); }
+      tbody tr.selected { background: var(--border); color: var(--text-primary); }
+
+      /* Run-history strip of individual rectangles */
+      .run-strip { display: inline-flex; gap: 2px; align-items: center; }
+      .run-dot {
+        display: inline-block; width: 0.55rem; height: 1rem;
+        border-radius: 2px; transition: transform 0.15s ease;
+      }
+      .run-dot:hover { transform: scaleY(1.35); cursor: default; }
+      .run-dot.pass { background: var(--teal-bg); border: 1px solid var(--teal-base); }
+      .run-dot.fail { background: var(--coral-base); }
+
+      /* Panel slide‑in */
+      #panel { opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; }
+      #panel[style*="display: block"] { opacity: 1; transform: translateY(0); }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        table, thead, tbody, th, td, tr { display: block; }
+        th { position: absolute; left: -9999px; }
+        td { border: none; position: relative; padding-left: 50%; }
+        td::before {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 45%;
+          padding-right: 10px;
+          white-space: nowrap;
+          font-weight: 600;
+          color: var(--text-secondary);
+        }
+        td:nth-of-type(1)::before { content: "Test"; }
+        td:nth-of-type(2)::before { content: "Run history"; }
+        td:nth-of-type(3)::before { content: "Score"; }
+        td:nth-of-type(4)::before { content: "Pass / fail"; }
+        td:nth-of-type(5)::before { content: "Last run"; }
+      }
+    </style>
+  </body>
+</html>
