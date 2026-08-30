@@ -45,8 +45,22 @@ jobs:
           API_KEY: ${{ secrets.DETECTOR_API_KEY }}
           RAW_DETECTOR_URL: ${{ secrets.DETECTOR_URL }}
         run: |
+          DETECTOR_URL="${RAW_DETECTOR_URL:-https://flaky-test-detector-kbpc.onrender.com}"
+
+          # Wake up Render (free tier sleeps after inactivity) and wait for it
+          echo "Pinging Render to wake it up..."
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "${DETECTOR_URL}/health")
+            echo "Attempt $i: HTTP $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "Render is awake!"
+              break
+            fi
+            echo "Waiting 15s before retry..."
+            sleep 15
+          done
+
           if [ -f results/junit.xml ]; then
-            DETECTOR_URL="${RAW_DETECTOR_URL:-https://flaky-test-detector-kbpc.onrender.com}"
             python tools/junit_xml_to_ingest.py results/junit.xml \
               --url "${DETECTOR_URL}/api/v1/test-runs/ingest" \
               --commit-sha "${{ github.sha }}" \
