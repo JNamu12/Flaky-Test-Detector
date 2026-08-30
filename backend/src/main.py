@@ -44,11 +44,13 @@ if os.path.exists(data_dir):
 @app.get("/", include_in_schema=False)
 @app.get("/dashboard.html", include_in_schema=False)
 async def serve_dashboard():
-    dashboard_path = os.path.join(backend_dir, "dashboard.html")
-    if not os.path.exists(dashboard_path):
-        dashboard_path = os.path.abspath(os.path.join(backend_dir, "..", "dashboard.html"))
-    if os.path.exists(dashboard_path):
-        return FileResponse(dashboard_path)
+    src_dir = os.path.dirname(__file__)
+    b_dashboard = os.path.abspath(os.path.join(src_dir, "..", "dashboard.html"))
+    r_dashboard = os.path.abspath(os.path.join(src_dir, "..", "..", "dashboard.html"))
+    if os.path.exists(b_dashboard):
+        return FileResponse(b_dashboard)
+    if os.path.exists(r_dashboard):
+        return FileResponse(r_dashboard)
     return {"message": "Flaky Test Detector API is running. Go to /docs for API documentation."}
 
 @app.get("/health", tags=["system"])
