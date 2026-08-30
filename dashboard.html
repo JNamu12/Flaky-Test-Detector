@@ -317,7 +317,12 @@
           const lastFailure = failures.length ? failures[failures.length - 1] : null;
           summaries.push({ name, runs, score, passCount, failCount, total, lastRun, lastFailure });
         }
-        summaries.sort((a, b) => b.score - a.score);
+        summaries.sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          const tsA = a.lastRun ? new Date(a.lastRun.timestamp).getTime() : 0;
+          const tsB = b.lastRun ? new Date(b.lastRun.timestamp).getTime() : 0;
+          return tsB - tsA;
+        });
         return summaries;
       }
 

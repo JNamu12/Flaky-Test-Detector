@@ -1,12 +1,20 @@
 const { test, expect } = require('@playwright/test');
 
-test('sample passing checkout test', async ({ page }) => {
+test('demo_flaky_checkout_network_retry', async ({ page }, testInfo) => {
+  await page.goto('https://example.com');
+  if (testInfo.retry === 0) {
+    expect(false).toBe(true);
+  } else {
+    await expect(page).toHaveTitle(/Example Domain/);
+  }
+});
+
+test('demo_passing_checkout_test', async ({ page }) => {
   await page.goto('https://example.com');
   await expect(page).toHaveTitle(/Example Domain/);
 });
 
-test('sample API status test', async ({ page }) => {
+test('demo_failing_payment_gateway_bug', async ({ page }) => {
   await page.goto('https://example.com');
-  const h1 = page.locator('h1');
-  await expect(h1).toHaveText('Example Domain');
+  expect('Payment Gateway Timeout').toBe('Payment Success 200');
 });
