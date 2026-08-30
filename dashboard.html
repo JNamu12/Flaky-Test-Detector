@@ -1508,19 +1508,7 @@
 
       async function loadData() {
         try {
-          let resp = await fetch('/api/v1/test-runs/');
-          if (resp.ok) {
-            const rawRuns = await resp.json();
-            if (Array.isArray(rawRuns) && rawRuns.length > 0) {
-              allRawRuns = rawRuns;
-              summaries = buildSummaries(rawRuns);
-              applySortingAndRender();
-              renderStats();
-              return;
-            }
-          }
-
-          resp = await fetch('/api/v1/flaky-tests/');
+          let resp = await fetch('/api/v1/flaky-tests/');
           if (resp.ok) {
             const flakyList = await resp.json();
             if (Array.isArray(flakyList) && flakyList.length > 0) {
@@ -1542,6 +1530,18 @@
                 lastRunTS: new Date().toISOString(),
                 history: Array(item.total_runs).fill(item.last_status)
               }));
+              applySortingAndRender();
+              renderStats();
+              return;
+            }
+          }
+
+          resp = await fetch('/api/v1/test-runs/');
+          if (resp.ok) {
+            const rawRuns = await resp.json();
+            if (Array.isArray(rawRuns) && rawRuns.length > 0) {
+              allRawRuns = rawRuns;
+              summaries = buildSummaries(rawRuns);
               applySortingAndRender();
               renderStats();
               return;
