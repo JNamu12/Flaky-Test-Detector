@@ -1,16 +1,21 @@
 import hashlib
 import numpy as np
 
+import os
+
 _model = None
 
 def get_model():
     global _model
     if _model is None:
-        try:
-            from sentence_transformers import SentenceTransformer
-            _model = SentenceTransformer('BAAI/bge-small-en-v1.5')
-        except Exception as e:
-            print(f"SentenceTransformer fallback enabled: {e}")
+        if os.getenv("USE_LOCAL_EMBEDDINGS", "false").lower() == "true":
+            try:
+                from sentence_transformers import SentenceTransformer
+                _model = SentenceTransformer('BAAI/bge-small-en-v1.5')
+            except Exception as e:
+                print(f"SentenceTransformer fallback enabled: {e}")
+                _model = False
+        else:
             _model = False
     return _model
 

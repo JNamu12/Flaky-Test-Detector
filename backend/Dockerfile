@@ -14,9 +14,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Pre-cache the sentence transformers model at build time (avoids runtime OOM on 512MB Render free tier)
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-small-en-v1.5')" || echo "Model pre-cache skipped (network unavailable)"
-
 # Expose port 8000
 EXPOSE 8000
 
