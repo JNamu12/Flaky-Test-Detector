@@ -10,6 +10,7 @@ from ..services.junit_parser import parse_junit_xml_bytes
 
 router = APIRouter(prefix="/api/v1/test-runs", tags=["test-runs"])
 
+@router.get("")
 @router.get("/")
 def get_all_test_runs(db: Session = Depends(get_db)):
     """Return all raw TestRun records stored in the SQLite database."""
