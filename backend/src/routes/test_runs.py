@@ -51,12 +51,15 @@ def ingest_test_runs(batch: TestRunBatch, db: Session = Depends(get_db), _api_ke
         )
         db.add(orm_obj)
         if tr.status == "fail" and tr.error_message:
-            upsert_failure(
-                test_name=tr.test_name,
-                error_message=tr.error_message,
-                stack_trace=tr.stack_trace,
-                timestamp=tr.timestamp,
-            )
+            try:
+                upsert_failure(
+                    test_name=tr.test_name,
+                    error_message=tr.error_message,
+                    stack_trace=tr.stack_trace,
+                    timestamp=tr.timestamp,
+                )
+            except Exception as e:
+                print(f"Note on vector indexing: {e}")
         count += 1
     db.commit()
     return {"ingested": count}
@@ -98,12 +101,15 @@ async def ingest_junit_xml(
         )
         db.add(orm_obj)
         if tr["status"] == "fail" and tr["error_message"]:
-            upsert_failure(
-                test_name=tr["test_name"],
-                error_message=tr["error_message"],
-                stack_trace=tr["stack_trace"],
-                timestamp=tr["timestamp"],
-            )
+            try:
+                upsert_failure(
+                    test_name=tr["test_name"],
+                    error_message=tr["error_message"],
+                    stack_trace=tr["stack_trace"],
+                    timestamp=tr["timestamp"],
+                )
+            except Exception as e:
+                print(f"Note on vector indexing: {e}")
         count += 1
     db.commit()
     return {"ingested": count, "source_tool": source_tool or "junit"}
