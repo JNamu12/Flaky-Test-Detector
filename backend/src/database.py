@@ -24,9 +24,38 @@ class TestRunORM(Base):
     stack_trace = Column(Text, nullable=True)
     commit_sha = Column(String, nullable=True)
 
+import json
+from datetime import datetime, timezone
+
 def init_db():
-    """Create tables if they do not exist."""
+    """Create tables if they do not exist, and auto-seed if empty."""
     Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        if db.query(TestRunORM).first() is None:
+            sample_path = os.path.join(os.path.dirname(__file__), "..", "data", "sample_test_runs.json")
+            if os.path.exists(sample_path):
+                with open(sample_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    runs = data.get("runs", data) if isinstance(data, dict) else data
+                    for tr in runs:
+                        ts_str = tr.get("timestamp")
+                        ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00")) if ts_str else datetime.now(timezone.utc)
+                        orm_obj = TestRunORM(
+                            test_name=tr["test_name"],
+                            status=tr["status"],
+                            timestamp=ts,
+                            duration_ms=tr.get("duration_ms", 0),
+                            error_message=tr.get("error_message"),
+                            stack_trace=tr.get("stack_trace"),
+                            commit_sha=tr.get("commit_sha"),
+                        )
+                        db.add(orm_obj)
+                    db.commit()
+    except Exception as e:
+        print(f"Auto-seed note: {e}")
+    finally:
+        db.close()
 
 def get_db():
     """Yield a SQLAlchemy session for FastAPI dependency injection."""
@@ -35,3 +64,4 @@ def get_db():
         yield db
     finally:
         db.close()
+

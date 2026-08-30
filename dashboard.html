@@ -1508,6 +1508,22 @@
 
       async function loadData() {
         try {
+          const resp = await fetch('/api/v1/test-runs/');
+          if (resp.ok) {
+            const rawRuns = await resp.json();
+            if (Array.isArray(rawRuns) && rawRuns.length > 0) {
+              allRawRuns = rawRuns;
+              summaries = buildSummaries(rawRuns);
+              applySortingAndRender();
+              renderStats();
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('API fetch for live runs failed, trying sample file', e);
+        }
+
+        try {
           const resp = await fetch('data/sample_test_runs.json');
           if (!resp.ok) throw new Error('Failed to load sample data');
           const rawRuns = await resp.json();

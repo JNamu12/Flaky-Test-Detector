@@ -10,6 +10,24 @@ from ..services.junit_parser import parse_junit_xml_bytes
 
 router = APIRouter(prefix="/api/v1/test-runs", tags=["test-runs"])
 
+@router.get("/")
+def get_all_test_runs(db: Session = Depends(get_db)):
+    """Return all raw TestRun records stored in the SQLite database."""
+    runs = db.query(TestRunORM).order_by(TestRunORM.timestamp.desc()).all()
+    return [
+        {
+            "id": r.id,
+            "test_name": r.test_name,
+            "status": r.status,
+            "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+            "duration_ms": r.duration_ms,
+            "error_message": r.error_message,
+            "stack_trace": r.stack_trace,
+            "commit_sha": r.commit_sha,
+        }
+        for r in runs
+    ]
+
 def verify_api_key(x_api_key: str = Header(None, alias="X-API-Key")):
     expected_key = os.getenv("API_KEY")
     if expected_key:
