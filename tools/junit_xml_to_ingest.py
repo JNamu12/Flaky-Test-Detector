@@ -234,7 +234,7 @@ def diagnose(runs):
 # HTTP POST
 import time
 
-def post_payload(url, payload, api_key=None, max_retries=3):
+def post_payload(url, payload, api_key=None, max_retries=10):
     data = json.dumps(payload).encode("utf-8")
     headers = {"Content-Type": "application/json"}
     if api_key:
