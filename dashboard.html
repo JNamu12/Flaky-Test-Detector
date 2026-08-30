@@ -1516,15 +1516,15 @@
             const data = await resp.json();
             if (Array.isArray(data) && data.length > 0) {
               if (data[0].flakiness_score !== undefined) {
-                allRawRuns = data.map(item => ({
+                allRawRuns = data.flatMap(item => Array(item.total_runs).fill(null).map((_, i) => ({
                   test_name: item.test_name,
-                  status: item.last_status,
-                  timestamp: new Date().toISOString(),
+                  status: (i < item.fail_count) ? 'fail' : 'pass',
+                  timestamp: new Date(Date.now() - (item.total_runs - i) * 60000).toISOString(),
                   duration_ms: 150,
-                  error_message: item.last_status === 'fail' ? 'Test failure' : null,
+                  error_message: item.fail_count > 0 ? 'Test failure' : null,
                   stack_trace: null,
                   commit_sha: 'live'
-                }));
+                })));
               } else {
                 allRawRuns = data;
               }
