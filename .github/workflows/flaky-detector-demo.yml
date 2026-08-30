@@ -43,10 +43,12 @@ jobs:
         if: always()
         env:
           API_KEY: ${{ secrets.DETECTOR_API_KEY }}
+          RAW_DETECTOR_URL: ${{ secrets.DETECTOR_URL }}
         run: |
           if [ -f results/junit.xml ]; then
+            DETECTOR_URL="${RAW_DETECTOR_URL:-https://flaky-test-detector-kbpc.onrender.com}"
             python tools/junit_xml_to_ingest.py results/junit.xml \
-              --url "${{ secrets.DETECTOR_URL }}/api/v1/test-runs/ingest" \
+              --url "${DETECTOR_URL}/api/v1/test-runs/ingest" \
               --commit-sha "${{ github.sha }}" \
               --api-key "${API_KEY}"
           else
