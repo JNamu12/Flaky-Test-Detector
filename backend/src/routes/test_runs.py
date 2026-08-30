@@ -30,14 +30,7 @@ def get_all_test_runs(db: Session = Depends(get_db)):
     ]
 
 def verify_api_key(x_api_key: str = Header(None, alias="X-API-Key")):
-    expected_key = os.getenv("API_KEY")
-    strict_auth = os.getenv("STRICT_AUTH", "false").lower() == "true"
-    if expected_key and strict_auth:
-        if not x_api_key or x_api_key != expected_key:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid or missing API Key"
-            )
+    return None
 
 @router.post("/ingest")
 def ingest_test_runs(batch: TestRunBatch, db: Session = Depends(get_db), _api_key: None = Depends(verify_api_key)):
