@@ -1,0 +1,12 @@
+{
+  "name": "flaky-test-detector-demo",
+  "version": "1.0.0",
+  "description": "Playwright test suite for Flaky Test Detector demo pipeline",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0"
+  }
+}
