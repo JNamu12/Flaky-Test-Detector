@@ -55,7 +55,7 @@ async def serve_dashboard():
 
 @app.get("/api/v1/version", tags=["system"])
 async def get_version():
-    return {"version": "commit-e4f3fcd-v2", "status": "no-api-key-required"}
+    return {"version": "commit-a15f814-v3", "status": "no-api-key-required"}
 
 @app.get("/health", tags=["system"])
 async def health_check():
