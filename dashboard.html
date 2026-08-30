@@ -1512,6 +1512,7 @@
 ];
 
       async function loadData() {
+        let liveRuns = [];
         try {
           let resp = await fetch('/api/v1/test-runs/');
           if (!resp.ok) {
@@ -1521,43 +1522,28 @@
             const data = await resp.json();
             if (Array.isArray(data) && data.length > 0) {
               if (data[0].flakiness_score !== undefined) {
-                allRawRuns = data.flatMap(item => Array(item.total_runs).fill(null).map((_, i) => ({
+                liveRuns = data.flatMap(item => Array(item.total_runs || 1).fill(null).map((_, i) => ({
                   test_name: item.test_name,
-                  status: (i < item.fail_count) ? 'fail' : 'pass',
-                  timestamp: new Date(Date.now() - (item.total_runs - i) * 60000).toISOString(),
+                  status: (i < item.fail_count) ? 'fail' : (item.last_status || 'pass'),
+                  timestamp: new Date(Date.now() - ((item.total_runs || 1) - i) * 60000).toISOString(),
                   duration_ms: 150,
                   error_message: item.fail_count > 0 ? 'Test failure' : null,
                   stack_trace: null,
                   commit_sha: 'live'
                 })));
               } else {
-                allRawRuns = data;
+                liveRuns = data;
               }
-              summaries = buildSummaries(allRawRuns);
-              applySortingAndRender();
-              renderStats();
-              return;
             }
           }
         } catch (e) {
           console.warn('API fetch for live runs failed', e);
         }
 
-        try {
-          const resp = await fetch('data/sample_test_runs.json');
-          if (!resp.ok) throw new Error('Failed to load sample data');
-          const rawRuns = await resp.json();
-          allRawRuns = rawRuns;
-          summaries = buildSummaries(rawRuns);
-          applySortingAndRender();
-          renderStats();
-        } catch (e) {
-          console.warn('Network fetch failed or CORS blocked. Falling back to embedded local data.', e);
-          allRawRuns = EMBEDDED_RUNS;
-          summaries = buildSummaries(allRawRuns);
-          applySortingAndRender();
-          renderStats();
-        }
+        allRawRuns = liveRuns.length > 0 ? [...liveRuns, ...EMBEDDED_RUNS] : EMBEDDED_RUNS;
+        summaries = buildSummaries(allRawRuns);
+        applySortingAndRender();
+        renderStats();
       }
 
       function applySortingAndRender() {

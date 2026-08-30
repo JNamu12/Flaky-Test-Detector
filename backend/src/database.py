@@ -33,8 +33,13 @@ def init_db():
     db = SessionLocal()
     try:
         if db.query(TestRunORM).first() is None:
-            sample_path = os.path.join(os.path.dirname(__file__), "..", "data", "sample_test_runs.json")
-            if os.path.exists(sample_path):
+            sample_paths = [
+                os.path.join(os.path.dirname(__file__), "..", "data", "sample_test_runs.json"),
+                os.path.join(os.path.dirname(__file__), "..", "..", "data", "sample_test_runs.json"),
+                os.path.abspath(os.path.join(BASE_DIR, "data", "sample_test_runs.json")),
+            ]
+            sample_path = next((p for p in sample_paths if os.path.exists(p)), None)
+            if sample_path:
                 with open(sample_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     runs = data.get("runs", data) if isinstance(data, dict) else data
