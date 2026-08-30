@@ -53,6 +53,10 @@ async def serve_dashboard():
         return FileResponse(r_dashboard)
     return {"message": "Flaky Test Detector API is running. Go to /docs for API documentation."}
 
+@app.get("/api/v1/version", tags=["system"])
+async def get_version():
+    return {"version": "commit-e4f3fcd-v2", "status": "no-api-key-required"}
+
 @app.get("/health", tags=["system"])
 async def health_check():
     try:
