@@ -255,7 +255,12 @@ def post_payload(url, payload, api_key=None, max_retries=3):
                 return
         except urllib.error.HTTPError as e:
             body = e.read().decode()
-            print(f"HTTP {e.code} -- Error: {body}", file=sys.stderr)
+            if e.code == 401:
+                print(f"\n❌ AUTHENTICATION FAILED (HTTP 401): {body}", file=sys.stderr)
+                print("👉 FIX: Go to your GitHub Repository -> Settings -> Secrets and variables -> Actions.", file=sys.stderr)
+                print("👉 Make sure 'DETECTOR_API_KEY' matches the 'API_KEY' set in your Render Environment Variables.", file=sys.stderr)
+            else:
+                print(f"HTTP {e.code} -- Error: {body}", file=sys.stderr)
             sys.exit(1)
         except (urllib.error.URLError, TimeoutError, OSError) as e:
             print(f"Attempt {attempt} failed: {e}. Server may be waking up from sleep.", file=sys.stderr)
