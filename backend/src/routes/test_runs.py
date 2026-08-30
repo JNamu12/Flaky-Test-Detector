@@ -31,7 +31,8 @@ def get_all_test_runs(db: Session = Depends(get_db)):
 
 def verify_api_key(x_api_key: str = Header(None, alias="X-API-Key")):
     expected_key = os.getenv("API_KEY")
-    if expected_key:
+    require_key = os.getenv("REQUIRE_API_KEY", "false").lower() == "true"
+    if expected_key and require_key:
         if not x_api_key or x_api_key != expected_key:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
