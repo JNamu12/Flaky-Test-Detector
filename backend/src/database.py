@@ -3,9 +3,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-# SQLite database path (in project root)
+# SQLite database path (persistent location when deployed; local project root by default)
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-DB_PATH = os.getenv("DB_PATH", os.path.join(BASE_DIR, "flaky_test_detector.db"))
+DB_PATH = os.getenv("DB_PATH") or os.path.join(BASE_DIR, "flaky_test_detector.db")
+DB_DIR = os.path.dirname(DB_PATH) or BASE_DIR
+os.makedirs(DB_DIR, exist_ok=True)
+
 SQLALCHEMY_DATABASE_URL = f"sqlite+pysqlite:///{DB_PATH}"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})

@@ -6,6 +6,10 @@ services:
     plan: free
     dockerfilePath: backend/Dockerfile
     dockerContext: backend
+    disk:
+      name: flaky-detector-db
+      mountPath: /data
+      sizeGB: 1
     envVars:
       - key: QDRANT_URL
         sync: false
@@ -15,3 +19,5 @@ services:
         sync: false
       - key: GROQ_API_KEY
         sync: false
+      - key: DB_PATH
+        value: /data/flaky_test_detector.db
