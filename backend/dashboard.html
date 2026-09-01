@@ -476,10 +476,10 @@
           summaries.push({ name, runs, score, passCount, failCount, total, lastRun, lastFailure });
         }
         summaries.sort((a, b) => {
-          if (b.score !== a.score) return b.score - a.score;
           const tsA = a.lastRun ? new Date(a.lastRun.timestamp).getTime() : 0;
           const tsB = b.lastRun ? new Date(b.lastRun.timestamp).getTime() : 0;
-          return tsB - tsA;
+          if (tsB !== tsA) return tsB - tsA; // Most recent test runs first by default!
+          return b.score - a.score;
         });
         return summaries;
       }
@@ -487,7 +487,7 @@
       // ---------------------------------------------------------------------
       // Table rendering & sorting
       // ---------------------------------------------------------------------
-      let currentSort = { key: 'score', asc: false };
+      let currentSort = { key: 'last_run', asc: false };
       let summaries = [];
 
       function formatTS(ts) {
@@ -538,19 +538,19 @@
         tdScore.appendChild(badge);
         tr.appendChild(tdScore);
 
-        // 4 · Pass / fail counts + last failure timestamp
+        // 4 · Pass / fail counts
         const tdPF = document.createElement('td');
-        const lastFailStr = s.lastFailure ? formatTS(s.lastFailure.timestamp) : '—';
+        const lastFailTooltip = s.lastFailure ? ` (Last failure: ${formatTS(s.lastFailure.timestamp)})` : '';
+        tdPF.title = `Passed: ${s.passCount}, Failed: ${s.failCount}${lastFailTooltip}`;
         tdPF.innerHTML =
-          `<span style="color:var(--teal-base)">${s.passCount}</span>` +
+          `<span style="color:var(--teal-base);font-weight:600;">${s.passCount}</span>` +
           `<span style="color:var(--text-muted)"> / </span>` +
-          `<span style="color:var(--coral-base)">${s.failCount}</span>` +
-          `<span style="color:var(--text-muted);font-size:0.8em;margin-left:0.5em">${lastFailStr}</span>`;
+          `<span style="color:var(--coral-base);font-weight:600;">${s.failCount}</span>`;
         tr.appendChild(tdPF);
 
         // 5 · Last run timestamp
         const tdLast = document.createElement('td');
-        tdLast.textContent = formatTS(s.lastRun.timestamp);
+        tdLast.textContent = formatTS(s.lastRun ? s.lastRun.timestamp : null);
         tr.appendChild(tdLast);
 
         return tr;
@@ -1713,6 +1713,26 @@
         }
       }
 
+      function getSortValue(summary, key) {
+        if (!summary) return 0;
+        if (key === 'name' || key === 'test' || key === 'test_name') {
+          return (summary.name || '').toLowerCase();
+        }
+        if (key === 'total' || key === 'history' || key === 'total_runs') {
+          return summary.total || 0;
+        }
+        if (key === 'score' || key === 'flakiness_score') {
+          return summary.score || 0;
+        }
+        if (key === 'pass_fail' || key === 'passCount' || key === 'failCount') {
+          return summary.failCount || 0;
+        }
+        if (key === 'last_run' || key === 'lastRun' || key === 'timestamp') {
+          return summary.lastRun ? new Date(summary.lastRun.timestamp).getTime() : 0;
+        }
+        return summary[key] ?? 0;
+      }
+
       function applySortingAndRender() {
         const tbody = document.getElementById('table-body');
         tbody.innerHTML = '';
@@ -1723,10 +1743,16 @@
         }
         const sortKey = currentSort.key;
         const sorted = [...summaries].sort((a, b) => {
-          const valA = a[sortKey];
-          const valB = b[sortKey];
+          const valA = getSortValue(a, sortKey);
+          const valB = getSortValue(b, sortKey);
           if (valA < valB) return currentSort.asc ? -1 : 1;
           if (valA > valB) return currentSort.asc ? 1 : -1;
+          // Secondary sort: when sorting by another field, break ties by newest last_run
+          if (sortKey !== 'last_run') {
+            const tsA = getSortValue(a, 'last_run');
+            const tsB = getSortValue(b, 'last_run');
+            return tsB - tsA;
+          }
           return 0;
         });
         sorted.forEach((s, i) => {
@@ -1740,16 +1766,17 @@
       // ---------------------------------------------------------------------
       function initHeaderSorting() {
         const headerRow = document.querySelector('thead tr');
-        const keys = ['test_name', 'total_runs', 'flakiness_score', 'flakiness_score', 'last_run'];
+        const keys = ['name', 'total', 'score', 'pass_fail', 'last_run'];
         headerRow.querySelectorAll('th').forEach((th, idx) => {
           th.style.cursor = 'pointer';
+          th.title = 'Click to sort';
           th.addEventListener('click', () => {
             const key = keys[idx];
             if (currentSort.key === key) {
               currentSort.asc = !currentSort.asc;
             } else {
               currentSort.key = key;
-              currentSort.asc = true;
+              currentSort.asc = (key === 'name'); // alphabetical asc by default, numeric/timestamps desc
             }
             applySortingAndRender();
           });
