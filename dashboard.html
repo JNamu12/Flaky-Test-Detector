@@ -1631,6 +1631,25 @@
       // ---------------------------------------------------------------------
       // Detail View Panel (openPanel)
       // ---------------------------------------------------------------------
+      function extractStepName(r) {
+        if (!r) return 'Execution Step';
+        if (r.stack_trace) {
+          const matchLine = r.stack_trace.match(/(?:at\s+|in\s+)([^\r\n]+)/i);
+          if (matchLine && matchLine[1]) {
+            const line = matchLine[1].trim();
+            const shortLine = line.replace(/.*[\/\\]([^\/\\]+:\d+.*)/, '$1');
+            return shortLine.length > 55 ? shortLine.slice(0, 52) + '...' : shortLine;
+          }
+        }
+        if (r.error_message) {
+          const stepMatch = r.error_message.match(/(Step\s+\d+|Step:\s*[^:\n]+)/i);
+          if (stepMatch) return stepMatch[1].trim();
+          const errType = r.error_message.split(':')[0].trim();
+          if (errType) return errType;
+        }
+        return 'Execution Step';
+      }
+
       function openPanel(idx) {
         const rows = document.querySelectorAll('#table-body tr');
         rows.forEach((r, i) => r.classList.toggle('selected', i === idx));
@@ -1762,7 +1781,92 @@
         });
         container.appendChild(ul);
 
-        // 9. Show the panel
+        // 9. Step Failure Analysis Section
+        const stepAnalysisDiv = document.createElement('div');
+        stepAnalysisDiv.style.marginTop = '1.5rem';
+        stepAnalysisDiv.style.paddingTop = '1.25rem';
+        stepAnalysisDiv.style.borderTop = '1px solid var(--border)';
+
+        const stepTitle = document.createElement('h4');
+        stepTitle.style.marginBottom = '0.5rem';
+        stepTitle.textContent = 'Step Failure Analysis';
+        stepAnalysisDiv.appendChild(stepTitle);
+
+        // Group failures by step
+        const stepMap = {};
+        failureRuns.forEach(r => {
+          const stepKey = extractStepName(r);
+          if (!stepMap[stepKey]) {
+            stepMap[stepKey] = { count: 0, errors: new Set() };
+          }
+          stepMap[stepKey].count++;
+          if (r.error_message) {
+            stepMap[stepKey].errors.add(r.error_message.trim());
+          }
+        });
+
+        const sortedSteps = Object.entries(stepMap).sort((a, b) => b[1].count - a[1].count);
+        const totalFailedRuns = failureRuns.length;
+        const uniqueStepCount = sortedSteps.length;
+        const topStepRatio = uniqueStepCount > 0 ? (sortedSteps[0][1].count / totalFailedRuns) : 1;
+
+        // 3. Clear one-line summary (step_variance logic)
+        const stepSummaryP = document.createElement('p');
+        stepSummaryP.style.fontSize = '0.9rem';
+        stepSummaryP.style.marginBottom = '0.75rem';
+        stepSummaryP.style.color = 'var(--text-secondary)';
+
+        if (uniqueStepCount <= 1 || topStepRatio >= 0.75) {
+          stepSummaryP.innerHTML = `<strong>Summary:</strong> <span style="color:var(--coral-base);font-weight:600;">Failures are concentrated at one step</span>`;
+        } else {
+          stepSummaryP.innerHTML = `<strong>Summary:</strong> <span style="color:var(--amber-base);font-weight:600;">Failures occur at different steps each time</span>`;
+        }
+        stepAnalysisDiv.appendChild(stepSummaryP);
+
+        // 1 & 2. List of failing steps with frequency and deduplicated error messages
+        const stepList = document.createElement('div');
+        stepList.style.display = 'flex';
+        stepList.style.flexDirection = 'column';
+        stepList.style.gap = '0.6rem';
+
+        sortedSteps.forEach(([stepName, data]) => {
+          const stepCard = document.createElement('div');
+          stepCard.style.background = 'var(--bg)';
+          stepCard.style.border = '1px solid var(--border)';
+          stepCard.style.borderRadius = '0.25rem';
+          stepCard.style.padding = '0.6rem 0.85rem';
+
+          const stepHeader = document.createElement('div');
+          stepHeader.style.display = 'flex';
+          stepHeader.style.justifyContent = 'space-between';
+          stepHeader.style.alignItems = 'center';
+          stepHeader.style.marginBottom = '0.25rem';
+          stepHeader.innerHTML = `<strong>Step: ${stepName}</strong> <span class="badge fail" style="font-size:0.75rem;">Failed in ${data.count} of ${totalFailedRuns} failed runs</span>`;
+          stepCard.appendChild(stepHeader);
+
+          // Error messages (deduplicated)
+          if (data.errors.size > 0) {
+            const errList = document.createElement('ul');
+            errList.style.margin = '0.35rem 0 0 1rem';
+            errList.style.padding = '0';
+            errList.style.fontSize = '0.82rem';
+            errList.style.color = 'var(--coral-text)';
+            data.errors.forEach(errMsg => {
+              const errLi = document.createElement('li');
+              errLi.style.marginBottom = '0.2rem';
+              errLi.style.fontFamily = 'monospace';
+              errLi.textContent = errMsg;
+              errList.appendChild(errLi);
+            });
+            stepCard.appendChild(errList);
+          }
+          stepList.appendChild(stepCard);
+        });
+
+        stepAnalysisDiv.appendChild(stepList);
+        container.appendChild(stepAnalysisDiv);
+
+        // 10. Show the panel
         panel.style.display = 'block';
       }
 
