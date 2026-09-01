@@ -96,33 +96,85 @@
       background: var(--bg);
     }
 
-    /* Panel (detail view) */
+    /* ── Slide-over Detail Drawer & Backdrop ─────────────────────────── */
+    #panel-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(3px);
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    #panel-backdrop.open {
+      display: block;
+      opacity: 1;
+    }
+
     #panel {
-      display: none; /* hidden by default */
-      margin: 2rem;
-      border: 1px solid var(--border);
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 720px;
+      max-width: calc(100vw - 30px);
+      height: 100vh;
       background: var(--surface);
+      border-left: 1px solid var(--border);
+      box-shadow: -10px 0 35px rgba(0, 0, 0, 0.45);
+      z-index: 1000;
+      overflow-y: auto;
+      margin: 0;
+      transform: translateX(105%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+      opacity: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    #panel.open {
+      transform: translateX(0);
+      opacity: 1;
     }
 
     #panel header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 1rem;
+      align-items: flex-start;
+      padding: 1.1rem 1.4rem;
       border-bottom: 1px solid var(--border);
-      background: var(--bg);
+      background: var(--surface);
+      gap: 1rem;
     }
 
     #panel header .title {
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      word-break: break-all;
+      line-height: 1.4;
     }
 
     #panel header button {
       background: transparent;
-      border: none;
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
       color: var(--text-primary);
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       cursor: pointer;
+      padding: 0.3rem 0.6rem;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    #panel header button:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
     }
 
     /* Helper badge classes */
@@ -355,13 +407,14 @@
     </tbody>
     </table>
 
-    <!-- Detail panel -->
+    <!-- Backdrop overlay & Slide-over Detail Drawer -->
+    <div id="panel-backdrop" onclick="closePanel()"></div>
     <div id="panel">
       <header>
         <span class="title">Detail view</span>
-        <button aria-label="Close" onclick="closePanel()">✕</button>
+        <button aria-label="Close" onclick="closePanel()" title="Close (Esc)">✕</button>
       </header>
-      <div class="content" style="padding:1rem;">
+      <div class="content" style="padding:1.4rem;flex:1;">
         <div id="analysis-content"></div>
       </div>
     </div>
@@ -2156,12 +2209,19 @@
         });
         container.appendChild(ul);
 
-        // 10. Show the panel
-        panel.style.display = 'block';
+        // 10. Open the slide-over drawer
+        const backdrop = document.getElementById('panel-backdrop');
+        panel.classList.add('open');
+        if (backdrop) backdrop.classList.add('open');
+        document.body.style.overflow = 'hidden';
       }
 
       function closePanel() {
-        document.getElementById('panel').style.display = 'none';
+        const panel = document.getElementById('panel');
+        const backdrop = document.getElementById('panel-backdrop');
+        if (panel) panel.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('open');
+        document.body.style.overflow = '';
         const rows = document.querySelectorAll('#table-body tr');
         rows.forEach(r => r.classList.remove('selected'));
         selectedRowIndex = -1;
@@ -2191,10 +2251,6 @@
       .run-dot:hover { transform: scaleY(1.35); cursor: default; }
       .run-dot.pass { background: var(--teal-bg); border: 1px solid var(--teal-base); }
       .run-dot.fail { background: var(--coral-base); }
-
-      /* Panel slide‑in */
-      #panel { opacity: 0; transform: translateY(20px); transition: opacity 0.3s ease, transform 0.3s ease; }
-      #panel[style*="display: block"] { opacity: 1; transform: translateY(0); }
 
       /* Responsive adjustments */
       @media (max-width: 768px) {
