@@ -333,9 +333,15 @@
       let summaries = [];
 
       function formatTS(ts) {
+        if (!ts) return '—';
         const d = new Date(ts);
-        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
-          + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        if (isNaN(d.getTime())) return '—';
+        const day = String(d.getDate()).padStart(2, '0');
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const month = monthNames[d.getMonth()];
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${day} ${month} ${hours}:${minutes}`;
       }
 
       function renderRow(s, idx) {
