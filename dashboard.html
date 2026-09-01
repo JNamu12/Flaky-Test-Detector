@@ -408,14 +408,34 @@
         if (!errMsg) return { category: 'unknown', verdict: 'likely_flaky' };
         const m = errMsg.toLowerCase();
 
+        // Server connection refused / Localhost not reachable
+        if (m.includes('err_connection_refused') || m.includes('econnrefused') || m.includes('connection refused')) {
+          return { category: 'server connection offline', verdict: 'likely_real_bug' };
+        }
+
         // Timing / race-condition indicators
-        if (m.includes('timeout') || m.includes('stale') || m.includes('target closed')) {
+        if (m.includes('timeout') || m.includes('stale') || m.includes('target closed') || m.includes('waitforselector')) {
           return { category: 'timing / race condition', verdict: 'likely_flaky' };
         }
 
-        // UI overlay / environment indicators
-        if (m.includes('click intercepted') || m.includes('not clickable')) {
-          return { category: 'ui overlay / environment', verdict: 'likely_flaky' };
+        // UI overlay / click intercepted
+        if (m.includes('click intercepted') || m.includes('not clickable') || m.includes('elementclickintercepted')) {
+          return { category: 'ui overlay / intercepted', verdict: 'likely_flaky' };
+        }
+
+        // Network / HTTP 5xx / API failure
+        if (m.includes('503') || m.includes('500') || m.includes('502') || m.includes('service unavailable') || m.includes('networkerror')) {
+          return { category: 'network / api timeout', verdict: 'likely_flaky' };
+        }
+
+        // Session / Auth expiry
+        if (m.includes('session_expired') || m.includes('unauthorized') || m.includes('session expired')) {
+          return { category: 'session / auth expiry', verdict: 'likely_flaky' };
+        }
+
+        // Missing Environment Variables / ReferenceError
+        if (m.includes('referenceerror') || m.includes('is undefined') || m.includes('is not defined')) {
+          return { category: 'environment / config missing', verdict: 'likely_flaky' };
         }
 
         // Generic one-off environment hiccup
@@ -430,10 +450,14 @@
           'order', 'invoice', 'payment', 'cart', 'checkout',
         ];
         if (
-          (m.includes('assert') || m.includes('expected') || m.includes('not equal')) &&
+          (m.includes('assert') || m.includes('expected') || m.includes('not equal') || m.includes('tobe(') || m.includes('tobegreaterthan')) &&
           businessTerms.some(term => m.includes(term))
         ) {
           return { category: 'genuine regression', verdict: 'likely_real_bug' };
+        }
+
+        if (m.includes('assert') || m.includes('expect(') || m.includes('tobe')) {
+          return { category: 'assertion failure', verdict: 'likely_real_bug' };
         }
 
         // Fallback
@@ -1929,7 +1953,7 @@
         let stepName = extractStepName(latestFail);
         const combinedContext = `${s.name} ${primaryError} ${latestFail.stack_trace || ''}`.toLowerCase();
         let toolName = 'Generic';
-        if (combinedContext.includes('playwright') || combinedContext.includes('.spec.') || combinedContext.includes('page.')) {
+        if (combinedContext.includes('playwright') || combinedContext.includes('.spec.') || combinedContext.includes('.ts') || combinedContext.includes('page.')) {
           toolName = 'Playwright';
         } else if (combinedContext.includes('selenium') || combinedContext.includes('webdriver')) {
           toolName = 'Selenium';
@@ -1937,27 +1961,72 @@
           toolName = 'Tosca';
         }
 
-        let nextStepText = 'Inspect detailed stack trace and isolate test execution environment.';
-        if (category === 'timing / race condition') {
+        const err = primaryError.toLowerCase();
+        let nextStepText = '';
+
+        // 1. Connection Refused / Server Not Started / Localhost
+        if (err.includes('err_connection_refused') || err.includes('econnrefused') || err.includes('connection refused') || err.includes('failed to fetch')) {
+          const urlMatch = primaryError.match(/https?:\/\/[^\s\/\)]+(?::\d+)?/i);
+          const targetUrl = urlMatch ? urlMatch[0] : 'http://localhost:3000';
+          nextStepText = `In step '${stepName}', the target application server at <code>${targetUrl}</code> was not reachable. Ensure the local dev server is running before tests start (e.g. run <code>npm run dev</code> or configure <code>webServer</code> in playwright.config.js).`;
+        }
+        // 2. Element Click Intercepted / Overlay / Not Clickable
+        else if (err.includes('click intercepted') || err.includes('not clickable') || err.includes('elementclickintercepted') || err.includes('overlay')) {
           if (toolName === 'Playwright') {
-            nextStepText = `In step '${stepName}', replace fixed wait with an explicit wait condition, e.g. (Playwright) <code>await page.locator('#submit').click({ timeout: 10000 })</code> so the test waits for interactivity.`;
+            nextStepText = `In step '${stepName}', wait for blocking modal/overlay to detach or scroll into view: <code>await page.locator('#target').scrollIntoViewIfNeeded(); await page.locator('.overlay').waitFor({ state: 'detached' });</code> before clicking.`;
           } else if (toolName === 'Selenium') {
-            nextStepText = `In step '${stepName}', replace fixed sleep with explicit wait, e.g. (Selenium) <code>WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'submit')))</code>.`;
+            nextStepText = `In step '${stepName}', wait for element to become interactive: <code>WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'submit')))</code>.`;
           } else if (toolName === 'Tosca') {
-            nextStepText = `In step '${stepName}', configure the 'WaitOn' property on the Module attribute or increase Synchronization timeout to wait for control readiness.`;
+            nextStepText = `In step '${stepName}', set 'WaitOn' property to 'Visible and Clickable' on the Module attribute to wait for overlay dismissal.`;
           } else {
-            nextStepText = `In step '${stepName}', replace fixed delays with dynamic wait conditions for element readiness.`;
+            nextStepText = `In step '${stepName}', ensure blocking overlay or animation finishes before interacting with the element.`;
           }
-        } else if (category === 'ui overlay / environment') {
+        }
+        // 3. Timeout / Wait for Selector / Locator
+        else if (err.includes('timeout') && (err.includes('waitfor') || err.includes('locator') || err.includes('selector') || err.includes('element') || err.includes('page.goto'))) {
           if (toolName === 'Playwright') {
-            nextStepText = `In step '${stepName}', check for blocking overlays or scroll into view: <code>await page.locator('#target').scrollIntoViewIfNeeded()</code> before interaction.`;
+            nextStepText = `In step '${stepName}', replace fixed delays with an explicit locator wait: <code>await page.locator('#target').waitFor({ state: 'visible', timeout: 15000 })</code> to handle asynchronous page hydration.`;
+          } else if (toolName === 'Selenium') {
+            nextStepText = `In step '${stepName}', replace thread sleep with explicit wait: <code>WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, 'target')))</code>.`;
           } else {
-            nextStepText = `In step '${stepName}', check for blocking modal overlay, z-index stacking, or animation timing.`;
+            nextStepText = `In step '${stepName}', increase locator timeout and replace fixed delays with dynamic readiness polling.`;
           }
-        } else if (category === 'environment') {
-          nextStepText = 'Capture diagnostic artifacts (Playwright trace viewer, DOM snapshots, and HAR network logs) on failure to verify backend service readiness.';
-        } else if (category === 'genuine regression') {
-          nextStepText = 'Investigate underlying business logic changes, API contract changes, and recent code commits.';
+        }
+        // 4. Network / HTTP 5xx / API Gateway Timeout
+        else if (err.includes('503') || err.includes('500') || err.includes('502') || err.includes('service unavailable') || err.includes('gateway timeout') || err.includes('waitforresponse')) {
+          if (toolName === 'Playwright') {
+            nextStepText = `In step '${stepName}', handle asynchronous backend response or mock API fixtures: <code>await page.waitForResponse(resp => resp.url().includes('/api') && resp.status() === 200, { timeout: 15000 })</code>.`;
+          } else {
+            nextStepText = `In step '${stepName}', implement network retry wrapper or mock unreliable 3rd-party microservice endpoints.`;
+          }
+        }
+        // 5. Session / Cookie / Auth Expiry
+        else if (err.includes('session_expired') || err.includes('unauthorized') || err.includes('cookie') || err.includes('login?reason=') || err.includes('session expired')) {
+          if (toolName === 'Playwright') {
+            nextStepText = `In step '${stepName}', authentication state expired. Save and reuse browser state via <code>test.use({ storageState: 'auth.json' })</code> to maintain a valid session across test workers.`;
+          } else {
+            nextStepText = `In step '${stepName}', verify authentication tokens and refresh session cookies before running subsequent test steps.`;
+          }
+        }
+        // 6. Missing Environment Variables / ReferenceError
+        else if (err.includes('referenceerror') || err.includes('is undefined') || err.includes('is not defined') || err.includes('process.env')) {
+          nextStepText = `In step '${stepName}', required environment variable is missing. Set the required configuration variable (e.g. <code>process.env.TEST_BASE_URL</code>) in your CI pipeline environment or <code>.env</code> file.`;
+        }
+        // 7. Strict mode violation / 0 elements / multiple elements
+        else if (err.includes('strict mode violation') || err.includes('resolved to 0 elements') || err.includes('resolved to multiple elements')) {
+          if (toolName === 'Playwright') {
+            nextStepText = `In step '${stepName}', refine locator specificity: use <code>page.locator('.item').first()</code> or add distinctive test ID attributes (<code>page.getByTestId('target')</code>).`;
+          } else {
+            nextStepText = `In step '${stepName}', refine locator selectors to target a unique DOM element.`;
+          }
+        }
+        // 8. Assertion errors / Genuine regression / Logic bugs
+        else if (err.includes('assert') || err.includes('expect(') || err.includes('tobegreaterthan') || err.includes('tobe') || err.includes('toequal') || verdict === 'likely_real_bug') {
+          nextStepText = `In step '${stepName}', assertion mismatch detected. Verify expected output against actual business logic changes and recent code commits.`;
+        }
+        // 9. Default fallback: diagnostic recommendation
+        else {
+          nextStepText = `In step '${stepName}', capture diagnostic artifacts (Playwright trace viewer, DOM snapshots, and HAR network logs) on failure to verify element attachment state and backend response.`;
         }
 
         // 8. Step Failure Breakdown Section (Prompt 3)
