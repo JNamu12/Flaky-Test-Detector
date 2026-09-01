@@ -1749,15 +1749,38 @@
         nextStepP.style.fontSize = '0.9rem';
         nextStepP.style.marginBottom = '1.25rem';
 
+        let stepName = extractStepName(latestFail);
+        const combinedContext = `${s.name} ${primaryError} ${latestFail.stack_trace || ''}`.toLowerCase();
+        let toolName = 'Generic';
+        if (combinedContext.includes('playwright') || combinedContext.includes('.spec.') || combinedContext.includes('page.')) {
+          toolName = 'Playwright';
+        } else if (combinedContext.includes('selenium') || combinedContext.includes('webdriver')) {
+          toolName = 'Selenium';
+        } else if (combinedContext.includes('tosca') || combinedContext.includes('tbox')) {
+          toolName = 'Tosca';
+        }
+
         let nextStepText = 'Inspect detailed stack trace and isolate test execution environment.';
         if (category === 'timing / race condition') {
-          nextStepText = 'Add explicit wait or retry wrapper to stabilize async assertions.';
+          if (toolName === 'Playwright') {
+            nextStepText = `In step '${stepName}', replace fixed wait with an explicit wait condition, e.g. (Playwright) <code>await page.locator('#submit').click({ timeout: 10000 })</code> so the test waits for interactivity.`;
+          } else if (toolName === 'Selenium') {
+            nextStepText = `In step '${stepName}', replace fixed sleep with explicit wait, e.g. (Selenium) <code>WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.ID, 'submit')))</code>.`;
+          } else if (toolName === 'Tosca') {
+            nextStepText = `In step '${stepName}', configure the 'WaitOn' property on the Module attribute or increase Synchronization timeout to wait for control readiness.`;
+          } else {
+            nextStepText = `In step '${stepName}', replace fixed delays with dynamic wait conditions for element readiness.`;
+          }
         } else if (category === 'ui overlay / environment') {
-          nextStepText = 'Check for blocking overlay, z-index stack, or animation timing.';
+          if (toolName === 'Playwright') {
+            nextStepText = `In step '${stepName}', check for blocking overlays or scroll into view: <code>await page.locator('#target').scrollIntoViewIfNeeded()</code> before interaction.`;
+          } else {
+            nextStepText = `In step '${stepName}', check for blocking modal overlay, z-index stacking, or animation timing.`;
+          }
         } else if (category === 'environment') {
-          nextStepText = 'Check test environment setup, network stability, or host hiccup.';
+          nextStepText = 'Capture diagnostic artifacts (Playwright trace viewer, DOM snapshots, and HAR network logs) on failure to verify backend service readiness.';
         } else if (category === 'genuine regression') {
-          nextStepText = 'Investigate underlying business logic changes and recent code commits.';
+          nextStepText = 'Investigate underlying business logic changes, API contract changes, and recent code commits.';
         }
         nextStepP.innerHTML = `<strong>Suggested Next Step:</strong> ${nextStepText}`;
         container.appendChild(nextStepP);
