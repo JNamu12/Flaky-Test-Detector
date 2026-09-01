@@ -171,13 +171,171 @@
         min-width: auto;
       }
     }
+
+    /* ── Smooth transitions for theme switch ─────────────────────────── */
+    * { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+
+    /* ── Light theme overrides ─────────────────────────────────────────── */
+    [data-theme="light"] {
+      --bg: #F5F7FA;
+      --surface: #FFFFFF;
+      --border: #DDE3EC;
+      --text-primary: #1a2232;
+      --text-secondary: #4a5568;
+      --text-muted: #8a97a8;
+      --teal-bg: #d0f5ef;
+      --teal-text: #0a4d44;
+      --amber-bg: #fff4cc;
+      --amber-text: #6b4c00;
+      --coral-bg: #ffd9d6;
+      --coral-text: #8b1c1c;
+    }
+
+    /* ── Layout: sidebar + content area ──────────────────────────────── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #AFCBEF 0%, #3A5F8A 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+      padding: 1.5rem 0 1rem 0;
+    }
+
+    .sidebar-brand {
+      padding: 0 1.25rem 1.5rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    .sidebar nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      flex: 1;
+    }
+
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.65rem 1.25rem;
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      font-size: 0.9rem;
+      border-left: 3px solid transparent;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .sidebar nav a:hover,
+    .sidebar nav a.active {
+      background: rgba(255,255,255,0.15);
+      border-left-color: #fff;
+      color: #fff;
+    }
+
+    .sidebar-footer {
+      padding: 0 1.25rem;
+    }
+
+    .sidebar-logout {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.65rem 0;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.9rem;
+      cursor: pointer;
+      border-top: 1px solid rgba(255,255,255,0.2);
+      padding-top: 1rem;
+    }
+
+    .sidebar-logout:hover {
+      color: #fff;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* ── Theme toggle button ──────────────────────────────────────────── */
+    .theme-toggle {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      border-radius: 0.375rem;
+      padding: 0.3rem 0.6rem;
+      cursor: pointer;
+      line-height: 1;
+      margin-left: auto;
+    }
+
+    .theme-toggle:hover {
+      background: var(--bg);
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .header-text { flex: 1; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main-content { margin-left: 0; }
+    }
   </style>
 </head>
 <body>
+<div class="layout">
+
+  <!-- ── Sidebar Navigation ──────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div>
+      <div class="sidebar-brand">🧪 FlakyDetect</div>
+      <nav>
+        <a href="/" class="active">🏠 Dashboard</a>
+        <a href="/api/v1/test-runs/" target="_blank">📊 Reports</a>
+        <a href="/api/v1/test-runs/" target="_blank">⏱ Test History</a>
+        <a href="/health" target="_blank">⚙ Settings</a>
+        <a href="https://github.com/JNamu12/Flaky-Test-Detector" target="_blank">❓ Help</a>
+      </nav>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-logout" onclick="alert('Log out clicked')">🚪 Log Out</div>
+    </div>
+  </aside>
+
+  <!-- ── Main Content Area ───────────────────────────────────────────── -->
+  <div class="main-content">
+
   <header>
-    <div class="eyebrow">Dashboard</div>
-    <h1>Flaky test detector</h1>
-    <div class="subtitle">Live view of test stability and AI analysis</div>
+    <div class="header-text">
+      <div class="eyebrow">Dashboard</div>
+      <h1>Flaky test detector</h1>
+      <div class="subtitle">Live view of test stability and AI analysis</div>
+    </div>
+    <button class="theme-toggle" id="theme-toggle-btn" title="Toggle light/dark theme">🌗</button>
   </header>
 
   <div id="stats"></div>
@@ -1964,5 +2122,31 @@
         td:nth-of-type(5)::before { content: "Last run"; }
       }
     </style>
-  </body>
+    </div><!-- /.main-content -->
+</div><!-- /.layout -->
+
+<script>
+  // ── Theme Toggle & Persistence ──────────────────────────────────────
+  (function() {
+    const btn = document.getElementById('theme-toggle-btn');
+    const saved = localStorage.getItem('ftd-theme');
+    if (saved === 'light') {
+      document.body.setAttribute('data-theme', 'light');
+      btn.textContent = '🌙';
+    }
+    btn.addEventListener('click', function() {
+      const isLight = document.body.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.body.removeAttribute('data-theme');
+        localStorage.setItem('ftd-theme', 'dark');
+        btn.textContent = '🌗';
+      } else {
+        document.body.setAttribute('data-theme', 'light');
+        localStorage.setItem('ftd-theme', 'light');
+        btn.textContent = '🌙';
+      }
+    });
+  })();
+</script>
+</body>
 </html>
