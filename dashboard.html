@@ -1731,7 +1731,7 @@
         const explP = document.createElement('p');
         explP.style.color = 'var(--text-secondary)';
         explP.style.lineHeight = '1.6';
-        explP.style.marginBottom = '1rem';
+        explP.style.marginBottom = '1.25rem';
 
         if (isFlaky) {
           explP.textContent = `Found ${similarFailures.length} matching failure(s) with this signature across the test suite. The flakiness score of ${formatScore(s.score)} alongside status transitions indicates non-deterministic behavior rather than a persistent code defect.`;
@@ -1740,15 +1740,7 @@
         }
         container.appendChild(explP);
 
-        // 7. Render one-line suggested next step
-        const nextStepP = document.createElement('p');
-        nextStepP.style.padding = '0.75rem 1rem';
-        nextStepP.style.borderRadius = '0.25rem';
-        nextStepP.style.background = 'var(--bg)';
-        nextStepP.style.borderLeft = '3px solid ' + (isFlaky ? 'var(--amber-base)' : 'var(--coral-base)');
-        nextStepP.style.fontSize = '0.9rem';
-        nextStepP.style.marginBottom = '1.25rem';
-
+        // 7. Compute tool-grounded actionable recommendation text
         let stepName = extractStepName(latestFail);
         const combinedContext = `${s.name} ${primaryError} ${latestFail.stack_trace || ''}`.toLowerCase();
         let toolName = 'Generic';
@@ -1782,10 +1774,116 @@
         } else if (category === 'genuine regression') {
           nextStepText = 'Investigate underlying business logic changes, API contract changes, and recent code commits.';
         }
-        nextStepP.innerHTML = `<strong>Suggested Next Step:</strong> ${nextStepText}`;
-        container.appendChild(nextStepP);
 
-        // 8. List similar failures found in step 4
+        // 8. Step Failure Breakdown Section (Prompt 3)
+        const hasStepData = failureRuns.some(r => {
+          if (r.stack_trace && r.stack_trace.trim().length > 0) return true;
+          if (r.error_message) {
+            const msg = r.error_message;
+            if (/step\s*\d+|at\s+[\w\.\/]+:\d+|in\s+test_|\.spec\.|\.py:|\.ts:|\.js:/i.test(msg)) return true;
+          }
+          return false;
+        });
+
+        if (hasStepData) {
+          const stepSection = document.createElement('div');
+          stepSection.style.marginBottom = '1.25rem';
+          stepSection.style.padding = '0.9rem 1rem';
+          stepSection.style.background = 'var(--bg)';
+          stepSection.style.border = '1px solid var(--border)';
+          stepSection.style.borderRadius = '0.375rem';
+
+          const stepTitle = document.createElement('h4');
+          stepTitle.style.margin = '0 0 0.5rem 0';
+          stepTitle.style.fontSize = '0.95rem';
+          stepTitle.textContent = 'Step Failure Breakdown';
+          stepSection.appendChild(stepTitle);
+
+          // Group failures by step
+          const stepMap = {};
+          failureRuns.forEach(r => {
+            const key = extractStepName(r);
+            if (!stepMap[key]) {
+              stepMap[key] = { count: 0, latestError: r.error_message || '' };
+            }
+            stepMap[key].count++;
+            if (r.error_message) {
+              stepMap[key].latestError = r.error_message;
+            }
+          });
+
+          const sortedSteps = Object.entries(stepMap).sort((a, b) => b[1].count - a[1].count);
+          const totalFailedRuns = failureRuns.length;
+          const uniqueStepCount = sortedSteps.length;
+          const topStepRatio = uniqueStepCount > 0 ? (sortedSteps[0][1].count / totalFailedRuns) : 1;
+
+          // Variance Summary
+          const stepSummaryP = document.createElement('div');
+          stepSummaryP.style.fontSize = '0.85rem';
+          stepSummaryP.style.marginBottom = '0.75rem';
+          stepSummaryP.style.color = 'var(--text-secondary)';
+
+          if (uniqueStepCount <= 1 || topStepRatio >= 0.75) {
+            stepSummaryP.innerHTML = `<strong>Variance Summary:</strong> <span style="color:var(--coral-base);font-weight:600;">Failures are concentrated at one step</span>`;
+          } else {
+            stepSummaryP.innerHTML = `<strong>Variance Summary:</strong> <span style="color:var(--amber-base);font-weight:600;">Failures occur at different steps each time</span>`;
+          }
+          stepSection.appendChild(stepSummaryP);
+
+          // 1. Table of steps
+          const stepTable = document.createElement('table');
+          stepTable.style.width = '100%';
+          stepTable.style.margin = '0 0 0.75rem 0';
+          stepTable.style.borderCollapse = 'collapse';
+          stepTable.style.fontSize = '0.82rem';
+
+          const thead = document.createElement('thead');
+          thead.innerHTML = `
+            <tr style="border-bottom:1px solid var(--border);text-align:left;">
+              <th style="padding:0.4rem 0.5rem;color:var(--text-secondary);font-weight:600;">Step Name</th>
+              <th style="padding:0.4rem 0.5rem;color:var(--text-secondary);font-weight:600;width:110px;">Failures</th>
+              <th style="padding:0.4rem 0.5rem;color:var(--text-secondary);font-weight:600;">Most Recent Error Message</th>
+            </tr>
+          `;
+          stepTable.appendChild(thead);
+
+          const tbody = document.createElement('tbody');
+          sortedSteps.forEach(([name, data]) => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--border)';
+            tr.innerHTML = `
+              <td style="padding:0.45rem 0.5rem;font-weight:600;color:var(--text-primary);"><span class="mono">${name}</span></td>
+              <td style="padding:0.45rem 0.5rem;"><span class="badge fail" style="font-size:0.75rem;">${data.count} of ${totalFailedRuns} runs</span></td>
+              <td style="padding:0.45rem 0.5rem;color:var(--coral-text);font-family:monospace;font-size:0.8rem;word-break:break-word;">${data.latestError || '—'}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+          stepTable.appendChild(tbody);
+          stepSection.appendChild(stepTable);
+
+          container.appendChild(stepSection);
+        }
+
+        // 2. Visually distinguished Actionable Recommendation box (Prompt 2 & 3)
+        const actionBox = document.createElement('div');
+        actionBox.style.padding = '0.85rem 1rem';
+        actionBox.style.borderRadius = '0.375rem';
+        actionBox.style.background = isFlaky ? 'rgba(255, 180, 0, 0.08)' : 'rgba(255, 111, 97, 0.08)';
+        actionBox.style.border = '1px solid ' + (isFlaky ? 'var(--amber-base)' : 'var(--coral-base)');
+        actionBox.style.marginBottom = '1.25rem';
+        actionBox.style.boxShadow = isFlaky ? '0 0 10px rgba(255, 180, 0, 0.1)' : '0 0 10px rgba(255, 111, 97, 0.1)';
+
+        actionBox.innerHTML = `
+          <div style="display:flex;align-items:center;gap:0.4rem;font-weight:600;font-size:0.9rem;margin-bottom:0.35rem;color:${isFlaky ? 'var(--amber-base)' : 'var(--coral-base)'};">
+            <span>⚡ Actionable Recommendation (What To Do)</span>
+          </div>
+          <div style="font-size:0.88rem;line-height:1.55;color:var(--text-primary);">
+            ${nextStepText}
+          </div>
+        `;
+        container.appendChild(actionBox);
+
+        // 9. List similar failures found in step 4
         const listTitle = document.createElement('h4');
         listTitle.style.marginBottom = '0.5rem';
         listTitle.textContent = `Similar Failures Across Suite (${similarFailures.length})`;
@@ -1803,91 +1901,6 @@
           ul.appendChild(li);
         });
         container.appendChild(ul);
-
-        // 9. Step Failure Analysis Section
-        const stepAnalysisDiv = document.createElement('div');
-        stepAnalysisDiv.style.marginTop = '1.5rem';
-        stepAnalysisDiv.style.paddingTop = '1.25rem';
-        stepAnalysisDiv.style.borderTop = '1px solid var(--border)';
-
-        const stepTitle = document.createElement('h4');
-        stepTitle.style.marginBottom = '0.5rem';
-        stepTitle.textContent = 'Step Failure Analysis';
-        stepAnalysisDiv.appendChild(stepTitle);
-
-        // Group failures by step
-        const stepMap = {};
-        failureRuns.forEach(r => {
-          const stepKey = extractStepName(r);
-          if (!stepMap[stepKey]) {
-            stepMap[stepKey] = { count: 0, errors: new Set() };
-          }
-          stepMap[stepKey].count++;
-          if (r.error_message) {
-            stepMap[stepKey].errors.add(r.error_message.trim());
-          }
-        });
-
-        const sortedSteps = Object.entries(stepMap).sort((a, b) => b[1].count - a[1].count);
-        const totalFailedRuns = failureRuns.length;
-        const uniqueStepCount = sortedSteps.length;
-        const topStepRatio = uniqueStepCount > 0 ? (sortedSteps[0][1].count / totalFailedRuns) : 1;
-
-        // 3. Clear one-line summary (step_variance logic)
-        const stepSummaryP = document.createElement('p');
-        stepSummaryP.style.fontSize = '0.9rem';
-        stepSummaryP.style.marginBottom = '0.75rem';
-        stepSummaryP.style.color = 'var(--text-secondary)';
-
-        if (uniqueStepCount <= 1 || topStepRatio >= 0.75) {
-          stepSummaryP.innerHTML = `<strong>Summary:</strong> <span style="color:var(--coral-base);font-weight:600;">Failures are concentrated at one step</span>`;
-        } else {
-          stepSummaryP.innerHTML = `<strong>Summary:</strong> <span style="color:var(--amber-base);font-weight:600;">Failures occur at different steps each time</span>`;
-        }
-        stepAnalysisDiv.appendChild(stepSummaryP);
-
-        // 1 & 2. List of failing steps with frequency and deduplicated error messages
-        const stepList = document.createElement('div');
-        stepList.style.display = 'flex';
-        stepList.style.flexDirection = 'column';
-        stepList.style.gap = '0.6rem';
-
-        sortedSteps.forEach(([stepName, data]) => {
-          const stepCard = document.createElement('div');
-          stepCard.style.background = 'var(--bg)';
-          stepCard.style.border = '1px solid var(--border)';
-          stepCard.style.borderRadius = '0.25rem';
-          stepCard.style.padding = '0.6rem 0.85rem';
-
-          const stepHeader = document.createElement('div');
-          stepHeader.style.display = 'flex';
-          stepHeader.style.justifyContent = 'space-between';
-          stepHeader.style.alignItems = 'center';
-          stepHeader.style.marginBottom = '0.25rem';
-          stepHeader.innerHTML = `<strong>Step: ${stepName}</strong> <span class="badge fail" style="font-size:0.75rem;">Failed in ${data.count} of ${totalFailedRuns} failed runs</span>`;
-          stepCard.appendChild(stepHeader);
-
-          // Error messages (deduplicated)
-          if (data.errors.size > 0) {
-            const errList = document.createElement('ul');
-            errList.style.margin = '0.35rem 0 0 1rem';
-            errList.style.padding = '0';
-            errList.style.fontSize = '0.82rem';
-            errList.style.color = 'var(--coral-text)';
-            data.errors.forEach(errMsg => {
-              const errLi = document.createElement('li');
-              errLi.style.marginBottom = '0.2rem';
-              errLi.style.fontFamily = 'monospace';
-              errLi.textContent = errMsg;
-              errList.appendChild(errLi);
-            });
-            stepCard.appendChild(errList);
-          }
-          stepList.appendChild(stepCard);
-        });
-
-        stepAnalysisDiv.appendChild(stepList);
-        container.appendChild(stepAnalysisDiv);
 
         // 10. Show the panel
         panel.style.display = 'block';
