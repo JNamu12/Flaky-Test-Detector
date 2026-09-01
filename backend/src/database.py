@@ -4,8 +4,17 @@ from sqlalchemy.orm import sessionmaker
 import os
 
 # SQLite database path (persistent location when deployed; local project root by default)
+# Look for persistent disk paths on Render or container environments
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-DB_PATH = os.getenv("DB_PATH") or os.path.join(BASE_DIR, "flaky_test_detector.db")
+PERSISTENT_DIR = os.getenv("DATA_DIR") or (
+    "/var/data" if os.path.isdir("/var/data") else ("/data" if os.path.isdir("/data") else None)
+)
+DEFAULT_DB_PATH = (
+    os.path.join(PERSISTENT_DIR, "flaky_test_detector.db")
+    if PERSISTENT_DIR
+    else os.path.join(BASE_DIR, "flaky_test_detector.db")
+)
+DB_PATH = os.getenv("DB_PATH") or DEFAULT_DB_PATH
 DB_DIR = os.path.dirname(DB_PATH) or BASE_DIR
 os.makedirs(DB_DIR, exist_ok=True)
 
@@ -31,11 +40,13 @@ import json
 from datetime import datetime, timezone
 
 def init_db():
-    """Create tables if they do not exist, and fast auto-seed if empty."""
+    """Create tables if they do not exist, and perform one-time auto-seed if empty."""
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
+    seed_marker = os.path.join(DB_DIR, ".seeded")
     try:
-        if db.query(TestRunORM).first() is None:
+        # Only seed once ever: check for persistent marker file AND empty table
+        if not os.path.exists(seed_marker) and db.query(TestRunORM).first() is None:
             sample_paths = [
                 os.path.join(os.path.dirname(__file__), "..", "data", "sample_test_runs.json"),
                 os.path.join(os.path.dirname(__file__), "..", "..", "data", "sample_test_runs.json"),
@@ -61,6 +72,12 @@ def init_db():
                         ))
                     db.bulk_save_objects(orm_objs)
                     db.commit()
+                # Create persistent marker so seeding never runs again on restart
+                try:
+                    with open(seed_marker, "w") as mf:
+                        mf.write(f"Seeded at {datetime.now(timezone.utc).isoformat()}")
+                except Exception as me:
+                    print(f"Seed marker notice: {me}")
     except Exception as e:
         print(f"Auto-seed note: {e}")
     finally:

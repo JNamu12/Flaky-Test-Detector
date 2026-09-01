@@ -18,7 +18,12 @@ def get_qdrant_client():
             _client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY if QDRANT_API_KEY else None)
         else:
             BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-            QDRANT_PATH = os.path.join(BASE_DIR, "qdrant_data")
+            PERSISTENT_DIR = os.getenv("DATA_DIR") or (
+                "/var/data" if os.path.isdir("/var/data") else ("/data" if os.path.isdir("/data") else None)
+            )
+            DEFAULT_QDRANT_PATH = os.path.join(PERSISTENT_DIR, "qdrant_data") if PERSISTENT_DIR else os.path.join(BASE_DIR, "qdrant_data")
+            QDRANT_PATH = os.getenv("QDRANT_PATH") or DEFAULT_QDRANT_PATH
+            os.makedirs(QDRANT_PATH, exist_ok=True)
             try:
                 _client = QdrantClient(path=QDRANT_PATH)
             except Exception:

@@ -1518,7 +1518,6 @@
 ];
 
       async function loadData() {
-        let liveRuns = [];
         try {
           let resp = await fetch('/api/v1/test-runs/');
           if (!resp.ok) {
@@ -1526,9 +1525,9 @@
           }
           if (resp.ok) {
             const data = await resp.json();
-            if (Array.isArray(data) && data.length > 0) {
-              if (data[0].flakiness_score !== undefined) {
-                liveRuns = data.flatMap(item => Array(item.total_runs || 1).fill(null).map((_, i) => ({
+            if (Array.isArray(data)) {
+              if (data.length > 0 && data[0].flakiness_score !== undefined) {
+                allRawRuns = data.flatMap(item => Array(item.total_runs || 1).fill(null).map((_, i) => ({
                   test_name: item.test_name,
                   status: (i < item.fail_count) ? 'fail' : (item.last_status || 'pass'),
                   timestamp: new Date(Date.now() - ((item.total_runs || 1) - i) * 60000).toISOString(),
@@ -1538,23 +1537,32 @@
                   commit_sha: 'live'
                 })));
               } else {
-                liveRuns = data;
+                allRawRuns = data;
               }
+              summaries = buildSummaries(allRawRuns);
+              applySortingAndRender();
+              renderStats();
+              return;
             }
           }
+          throw new Error('API returned non-OK status: ' + (resp ? resp.status : 'unknown'));
         } catch (e) {
-          console.warn('API fetch for live runs failed', e);
+          console.warn('API fetch for live runs failed or offline. Using local embedded data.', e);
+          allRawRuns = EMBEDDED_RUNS;
+          summaries = buildSummaries(allRawRuns);
+          applySortingAndRender();
+          renderStats();
         }
-
-        allRawRuns = liveRuns.length > 0 ? [...liveRuns, ...EMBEDDED_RUNS] : EMBEDDED_RUNS;
-        summaries = buildSummaries(allRawRuns);
-        applySortingAndRender();
-        renderStats();
       }
 
       function applySortingAndRender() {
         const tbody = document.getElementById('table-body');
         tbody.innerHTML = '';
+        if (summaries.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-secondary);">No test runs recorded yet. Ingest test results to view stability metrics.</td></tr>';
+          selectedRowIndex = -1;
+          return;
+        }
         const sortKey = currentSort.key;
         const sorted = [...summaries].sort((a, b) => {
           const valA = a[sortKey];
