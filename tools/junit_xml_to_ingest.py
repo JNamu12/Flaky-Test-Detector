@@ -26,6 +26,7 @@ Options
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -49,6 +50,20 @@ def current_git_sha():
         return result.stdout.strip()
     except (subprocess.CalledProcessError, FileNotFoundError):
         return None
+
+
+def clean_test_name(name: str) -> str:
+    """
+    Strip trailing Playwright/framework tag annotations like ' @demo', ' @smoke', ' @slow'.
+    Handles single and multiple tags at the end of the test name string.
+    Example:
+      'checkout_submit_button_race_condition @demo' -> 'checkout_submit_button_race_condition'
+      'checkout @demo @smoke' -> 'checkout'
+    """
+    if not name:
+        return name
+    # Strip any trailing ' @word' or ' @word-subword' tag sequences at end of string
+    return re.sub(r'(?:\s+@[\w-]+)+$', '', name).strip()
 
 
 def parse_duration(time_str):
@@ -143,6 +158,9 @@ def parse_junit_xml(xml_path, commit_sha):
                 full_name = f"{classname}::{name}"
             else:
                 full_name = name
+
+            # Clean trailing tag annotations (e.g. " @demo @smoke")
+            full_name = clean_test_name(full_name)
 
             # Deduplicate
             uid = (full_name, tc.get("time", ""), suite_ts or "")

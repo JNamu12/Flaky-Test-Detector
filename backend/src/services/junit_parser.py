@@ -1,6 +1,19 @@
+import re
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from typing import List, Dict, Tuple, Optional
+
+def clean_test_name(name: str) -> str:
+    """
+    Strip trailing Playwright/framework tag annotations like ' @demo', ' @smoke', ' @slow'.
+    Handles single and multiple tags at the end of the test name string.
+    Example:
+      'checkout_submit_button_race_condition @demo' -> 'checkout_submit_button_race_condition'
+      'checkout @demo @smoke' -> 'checkout'
+    """
+    if not name:
+        return name
+    return re.sub(r'(?:\s+@[\w-]+)+$', '', name).strip()
 
 def parse_duration(time_str: Optional[str]) -> int:
     """Convert a JUnit 'time' attribute (seconds, float) to milliseconds int."""
@@ -74,6 +87,9 @@ def parse_junit_xml_bytes(xml_bytes: bytes, commit_sha: Optional[str] = None, so
                 full_name = f"{classname}::{name}"
             else:
                 full_name = name
+
+            # Clean trailing tag annotations (e.g. " @demo @smoke")
+            full_name = clean_test_name(full_name)
 
             uid = (full_name, tc.get("time", ""), suite_ts or "")
             if uid in seen_ids:
