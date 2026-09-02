@@ -73,6 +73,70 @@ test('test_flaky_connection_2 @demo', async ({ page }) => {
 });
 
 // ============================================================================
+// CATEGORY 0b — MULTI-STEP FLAKY (fails at different steps each run)
+// ============================================================================
+// This test has 3 distinct steps. Each run Math.random() picks which step fails.
+// After several runs the dashboard will show:
+//   Step Failure Breakdown: failures SCATTERED across 3 steps (not concentrated)
+//   → Different AI suggestion shown for each failing step
+//   → Step Variance Concentration < 75% → confirms environment / timing flakiness
+// ============================================================================
+
+test('checkout_multi_step_scattered_failure @demo', async ({ page }) => {
+  /**
+   * Simulates: e-commerce checkout flow that fails at a DIFFERENT STEP each run.
+   *
+   * Step 1 — loginStep:         Auth token validation fails (network jitter on login API)
+   * Step 2 — addToCartStep:     DOM element detached during React re-render
+   * Step 3 — paymentSubmitStep: Payment gateway returns 503 intermittently
+   *
+   * Each CI run picks ONE of these steps randomly to fail.
+   * After 3+ runs the dashboard step table shows failures spread across all steps.
+   */
+  await page.goto('https://example.com');
+  await expect(page).toHaveTitle(/Example Domain/);
+
+  // Pick which step to fail this run (0 = pass, 1..3 = fail at step N)
+  const failStep = Math.random() < 0.75 ? Math.ceil(Math.random() * 3) : 0;
+
+  // ── Step 1: loginStep ──────────────────────────────────────────────────────
+  // Simulates: session token validation fails due to CI clock skew
+  if (failStep === 1) {
+    throw new Error(
+      'TimeoutError: page.waitForSelector: Timeout 8000ms exceeded. ' +
+      'Waiting for locator("#user-avatar") to be visible after login redirect. ' +
+      'Possible cause: Auth token validation slow due to CI clock skew. ' +
+      'at checkout_multi_step_scattered_failure (step: loginStep)'
+    );
+  }
+
+  // ── Step 2: addToCartStep ──────────────────────────────────────────────────
+  // Simulates: product card re-renders before click resolves
+  if (failStep === 2) {
+    throw new Error(
+      'Error: page.click: Element is detached from the DOM. ' +
+      'Selector: button[data-testid="add-to-cart-primary"]. ' +
+      'Element was visible during locator.resolve() but removed before click dispatch. ' +
+      'Root cause: product listing React re-render race. ' +
+      'at checkout_multi_step_scattered_failure (step: addToCartStep)'
+    );
+  }
+
+  // ── Step 3: paymentSubmitStep ──────────────────────────────────────────────
+  // Simulates: payment gateway microservice overloaded
+  if (failStep === 3) {
+    throw new Error(
+      'NetworkError: POST /api/v1/payments/submit — HTTP 503 Service Unavailable. ' +
+      'Response time: 31204ms exceeded timeout of 30000ms. ' +
+      'Retry-After header: 10s. Payment gateway under high load. ' +
+      'at checkout_multi_step_scattered_failure (step: paymentSubmitStep)'
+    );
+  }
+
+  // failStep === 0 → all steps pass this run
+});
+
+// ============================================================================
 // CATEGORY 1 — TIMING / RACE CONDITION
 // ============================================================================
 
