@@ -3,10 +3,16 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, File, UploadFile, Form, status
 from sqlalchemy.orm import Session
 
-from ..models import TestRunBatch
-from ..database import get_db, TestRunORM
-from ..services.vector_store import upsert_failure
-from ..services.junit_parser import parse_junit_xml_bytes
+try:
+    from ..models import TestRunBatch
+    from ..database import get_db, TestRunORM
+    from ..services.vector_store import upsert_failure
+    from ..services.junit_parser import parse_junit_xml_bytes
+except (ImportError, ValueError):
+    from src.models import TestRunBatch
+    from src.database import get_db, TestRunORM
+    from src.services.vector_store import upsert_failure
+    from src.services.junit_parser import parse_junit_xml_bytes
 
 router = APIRouter(prefix="/api/v1/test-runs", tags=["test-runs"])
 
