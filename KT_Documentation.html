@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flaky Test Detector — Complete Knowledge Transfer (KT) & Architecture Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1D4ED8;
+      --primary-hover: #1E40AF;
+      --primary-light: #EFF6FF;
+      --primary-border: #BFDBFE;
+      --accent-blue: #3B82F6;
+      --accent-cyan: #06B6D4;
+      --sidebar-bg: linear-gradient(180deg, #EBF3FA 0%, #D8E7F6 100%);
+      --sidebar-border: #CBD5E1;
+      --sidebar-text: #1E293B;
+      --sidebar-active-bg: #FFFFFF;
+      --sidebar-active-text: #1D4ED8;
+      
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --surface-elevated: #FFFFFF;
+      --border: #E2E8F0;
+      --border-subtle: #F1F5F9;
+      
+      --text-main: #0F172A;
+      --text-muted: #475569;
+      --text-soft: #94A3B8;
+      
+      --teal-bg: #ECFDF5;
+      --teal-border: #A7F3D0;
+      --teal-text: #065F46;
+      --amber-bg: #FFFBEB;
+      --amber-border: #FDE68A;
+      --amber-text: #92400E;
+      --coral-bg: #FEF2F2;
+      --coral-border: #FECACA;
+      --coral-text: #991B1B;
+      --code-bg: #0F172A;
+      --code-text: #F8FAFC;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text-main);
+      line-height: 1.65;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar Navigation ─────────────────────────────────────────── */
+    .sidebar {
+      width: 290px;
+      flex-shrink: 0;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--sidebar-border);
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      overflow-y: auto;
+      box-shadow: 2px 0 12px rgba(0, 0, 0, 0.03);
+    }
+
+    .sidebar-header {
+      padding: 1.5rem 1.25rem 1rem 1.25rem;
+      border-bottom: 1px solid rgba(203, 213, 225, 0.6);
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.01em;
+    }
+
+    .sidebar-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      font-weight: 500;
+    }
+
+    .sidebar-search {
+      margin-top: 0.9rem;
+      position: relative;
+    }
+
+    .sidebar-search input {
+      width: 100%;
+      padding: 0.45rem 0.75rem 0.45rem 2rem;
+      border-radius: 0.5rem;
+      border: 1px solid #CBD5E1;
+      font-size: 0.82rem;
+      background: #FFFFFF;
+      outline: none;
+      font-family: var(--font-sans);
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-search input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .sidebar-search svg {
+      position: absolute;
+      left: 0.65rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      color: var(--text-soft);
+    }
+
+    .sidebar-nav {
+      padding: 1rem 0.75rem 2rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      flex: 1;
+    }
+
+    .nav-group-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      padding: 0.75rem 0.65rem 0.35rem 0.65rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.55rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--primary);
+      transform: translateX(2px);
+    }
+
+    .nav-item.active {
+      background: var(--sidebar-active-bg);
+      color: var(--sidebar-active-text);
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08);
+      border-left: 3px solid var(--primary);
+    }
+
+    /* ── Main Content Area ──────────────────────────────────────────── */
+    .content-wrapper {
+      margin-left: 290px;
+      flex: 1;
+      padding: 2.5rem 3.5rem;
+      max-width: 1200px;
+    }
+
+    /* ── Hero Header ────────────────────────────────────────────────── */
+    .hero-header {
+      background: linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 100%);
+      border: 1px solid var(--primary-border);
+      border-radius: 1rem;
+      padding: 2.5rem;
+      margin-bottom: 3rem;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-header::after {
+      content: '';
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+      border-radius: 50%;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--primary-light);
+      border: 1px solid var(--primary-border);
+      color: var(--primary);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .hero-title {
+      font-size: 2.3rem;
+      font-weight: 800;
+      color: #0F172A;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+
+    .hero-description {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 800px;
+      line-height: 1.6;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(191, 219, 254, 0.5);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-weight: 500;
+    }
+
+    /* ── Content Sections ───────────────────────────────────────────── */
+    .section-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.85rem;
+      padding: 2.25rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+      scroll-margin-top: 2rem;
+    }
+
+    .section-title {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #0F172A;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      border-bottom: 2px solid var(--primary-light);
+      padding-bottom: 0.75rem;
+    }
+
+    .section-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    h3 {
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: #1E293B;
+      margin: 1.6rem 0 0.75rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #334155;
+      margin: 1.2rem 0 0.5rem 0;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: var(--text-main);
+      font-size: 0.96rem;
+    }
+
+    /* ── Callout Boxes ──────────────────────────────────────────────── */
+    .callout {
+      padding: 1.1rem 1.3rem;
+      border-radius: 0.65rem;
+      margin: 1.25rem 0;
+      font-size: 0.92rem;
+      line-height: 1.55;
+      display: flex;
+      gap: 0.85rem;
+      align-items: flex-start;
+    }
+
+    .callout-info {
+      background: #EFF6FF;
+      border-left: 4px solid #3B82F6;
+      color: #1E40AF;
+    }
+
+    .callout-success {
+      background: var(--teal-bg);
+      border-left: 4px solid #10B981;
+      color: var(--teal-text);
+    }
+
+    .callout-warning {
+      background: var(--amber-bg);
+      border-left: 4px solid #F59E0B;
+      color: var(--amber-text);
+    }
+
+    .callout-danger {
+      background: var(--coral-bg);
+      border-left: 4px solid #EF4444;
+      color: var(--coral-text);
+    }
+
+    .callout-icon {
+      font-size: 1.2rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    /* ── Tables ─────────────────────────────────────────────────────── */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1.25rem 0;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: left;
+    }
+
+    thead {
+      background: #F1F5F9;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    th, td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #F8FAFC; }
+
+    /* ── Badges ─────────────────────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 0.35rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .badge-pass { background: var(--teal-bg); border: 1px solid var(--teal-border); color: var(--teal-text); }
+    .badge-flaky { background: var(--amber-bg); border: 1px solid var(--amber-border); color: var(--amber-text); }
+    .badge-fail { background: var(--coral-bg); border: 1px solid var(--coral-border); color: var(--coral-text); }
+    .badge-blue { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; }
+
+    /* ── Code Blocks ────────────────────────────────────────────────── */
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      padding: 1.25rem;
+      border-radius: 0.65rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 1.1rem 0;
+      position: relative;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.87em;
+      background: #EEF2F6;
+      color: #0F172A;
+      padding: 0.15rem 0.35rem;
+      border-radius: 0.25rem;
+      border: 1px solid #E2E8F0;
+    }
+
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border: none;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1E293B;
+      color: #94A3B8;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 0.45rem 1rem;
+      border-top-left-radius: 0.65rem;
+      border-top-right-radius: 0.65rem;
+      margin-bottom: -1.1rem;
+    }
+
+    .code-header + pre {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+
+    /* ── Feature Cards Grid ─────────────────────────────────────────── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    .feature-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 0.65rem;
+      padding: 1.35rem;
+      transition: all 0.2s ease;
+      position: relative;
+      border-top: 3px solid var(--accent-blue);
+    }
+
+    .feature-card:hover {
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .feature-card-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .feature-card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 0.4rem;
+    }
+
+    .feature-card-text {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* ── Prompt Accordion Item ──────────────────────────────────────── */
+    .prompt-box {
+      border: 1px solid var(--border);
+      border-radius: 0.65rem;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: #FFFFFF;
+    }
+
+    .prompt-header {
+      background: #F8FAFC;
+      padding: 0.85rem 1.25rem;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: #1E293B;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.2s ease;
+      border-bottom: 1px solid transparent;
+    }
+
+    .prompt-header:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .prompt-box.open .prompt-header {
+      border-bottom-color: var(--border);
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .prompt-body {
+      padding: 1.25rem;
+      display: none;
+      font-size: 0.9rem;
+      background: #FFFFFF;
+    }
+
+    .prompt-box.open .prompt-body {
+      display: block;
+    }
+
+    /* ── Architecture Flow Chart ────────────────────────────────────── */
+    .arch-flow {
+      background: #F1F5F9;
+      border: 1px solid #CBD5E1;
+      border-radius: 0.65rem;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      overflow-x: auto;
+    }
+
+    /* ── Footer ─────────────────────────────────────────────────────── */
+    footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .content-wrapper { margin-left: 0; padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Left Sidebar Navigation ──────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        🧪 FlakyTest KT
+      </div>
+      <div class="sidebar-subtitle">Engineering Knowledge Transfer</div>
+      <div class="sidebar-search">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input type="text" id="sidebar-filter" placeholder="Search sections & prompts..." onkeyup="filterSidebar(this.value)">
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-menu">
+      <div class="nav-group-title">Core Architecture</div>
+      <a href="#overview" class="nav-item active">📋 1. Project Overview</a>
+      <a href="#architecture" class="nav-item">🏗️ 2. System Architecture</a>
+      <a href="#algorithm" class="nav-item">📊 3. Scoring & Variance Logic</a>
+      <a href="#ai-engine" class="nav-item">🤖 4. AI Root-Cause Engine</a>
+
+      <div class="nav-group-title">User Interface & Features</div>
+      <a href="#dashboard" class="nav-item">🎨 5. Interactive Dashboard</a>
+      <a href="#ingestion" class="nav-item">📥 6. Multi-Framework Ingest</a>
+      <a href="#deployment" class="nav-item">☁️ 7. Render & DevOps Setup</a>
+      <a href="#fast-demo" class="nav-item">⚡ 8. Fast Demo Playbook</a>
+
+      <div class="nav-group-title">Historical Evolution</div>
+      <a href="#prompt-history" class="nav-item">📜 9. All Prompts & Solutions</a>
+      <a href="#troubleshooting" class="nav-item">🛠️ 10. QA & Debugging Log</a>
+    </nav>
+  </aside>
+
+  <!-- ── Main Content Body ────────────────────────────────────────────── -->
+  <main class="content-wrapper">
+
+    <!-- Hero Header -->
+    <header class="hero-header">
+      <div class="hero-badge">Knowledge Transfer Document • AI_PROJECTS_2026</div>
+      <h1 class="hero-title">Flaky Test Detector Platform</h1>
+      <p class="hero-description">
+        Comprehensive architectural specifications, mathematical scoring models, LLM root-cause heuristics, and step-by-step operations guide for the AI-Powered Test Reliability & Flakiness Detection Platform.
+      </p>
+      <div class="hero-meta">
+        <div class="hero-meta-item"><strong>Author:</strong> QA Automation & AI Agentic Team</div>
+        <div class="hero-meta-item"><strong>Stack:</strong> FastAPI • SQLite • Qdrant • Groq Llama 3.1 • Playwright</div>
+        <div class="hero-meta-item"><strong>Live URL:</strong> <a href="https://flaky-test-detector-kbpc.onrender.com" target="_blank" style="color:var(--primary);text-decoration:none;font-weight:600;">flaky-test-detector-kbpc.onrender.com</a></div>
+        <div class="hero-meta-item"><strong>Date:</strong> September 2026</div>
+      </div>
+    </header>
+
+    <!-- SECTION 1: OVERVIEW -->
+    <section id="overview" class="section-block">
+      <h2 class="section-title">📋 1. Project Overview & Business Value</h2>
+      <p class="section-subtitle">Why the Flaky Test Detector was built and the core problems it solves.</p>
+
+      <p>
+        In modern CI/CD pipelines, <strong>flaky tests</strong> (tests that intermittently pass and fail on identical source code) are the #1 contributor to developer frustration, false alarms, and bloated release cycles. Traditional test reporters treat test failures as binary, forcing QA teams to manually re-run entire suites or guess whether a failure represents a genuine regression or a transient timing glitch.
+      </p>
+
+      <div class="cards-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon">⚡</div>
+          <div class="feature-card-title">Transition-Based Scoring</div>
+          <div class="feature-card-text">Quantifies flakiness strictly based on status flips (Pass ↔ Fail) across sequential historical executions rather than raw pass rates.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">🧠</div>
+          <div class="feature-card-title">Vector Semantic Search</div>
+          <div class="feature-card-text">Indexes error messages and stack traces into Qdrant to find recurring cluster patterns across disparate test files and execution shards.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">🎯</div>
+          <div class="feature-card-title">Actionable AI Fixes</div>
+          <div class="feature-card-text">Uses Groq Llama 3.1 8B to generate pinpointed code-level remediation syntax (Playwright locators, explicit waits, session fixes) rather than generic advice.</div>
+        </div>
+      </div>
+
+      <div class="callout callout-info">
+        <span class="callout-icon">💡</span>
+        <div>
+          <strong>Key Distinction:</strong> A test failing 100% of the time is <em>NOT</em> flaky — it is a <strong>Real Bug / Genuine Regression</strong>. A test is only categorized as <strong>Flaky</strong> if it exhibits flip-flopping non-deterministic transitions over time.
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: SYSTEM ARCHITECTURE -->
+    <section id="architecture" class="section-block">
+      <h2 class="section-title">🏗️ 2. System Architecture & Tech Stack</h2>
+      <p class="section-subtitle">End-to-end data flow from CI test runners to AI root cause delivery.</p>
+
+      <div class="arch-flow">
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 CI / CD TEST RUNNERS                                   │
+│   (Playwright Test / JUnit XML / Selenium / Tosca Server Execution API / GitHub Actions) │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │ HTTP POST /api/v1/test-runs/ingest
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              FASTAPI BACKEND SERVICE                                   │
+│  - Ingestion Engine: Strips @tags, validates schema, calculates duration & timestamps  │
+│  - Flakiness Scorer: Computes status transition flip-rate & step variance scores       │
+│  - Heuristic Classifier: Categorizes errors (timing, overlay, network, auth, assertion)│
+└───────────────────────┬────────────────────────────────────────┬───────────────────────┘
+                        │                                        │
+                        ▼                                        ▼
+┌───────────────────────────────────────────────┐ ┌──────────────────────────────────────┐
+│           SQLITE PERSISTENT STORAGE           │ │         QDRANT VECTOR DATABASE       │
+│       (/data/flaky_test_detector.db)          │ │         (Failure Vector Index)       │
+│  - Table: test_runs (id, name, status, ts...) │ │  - Collection: test_failures         │
+│  - Persistent volume on Render disk           │ │  - Fast top-K cosine similarity      │
+└───────────────────────────────────────────────┘ └──────────────────┬───────────────────┘
+                                                                     │ Similar Failures
+                                                                     ▼
+                                                  ┌──────────────────────────────────────┐
+                                                  │       GROQ LLM INFERENCE ENGINE      │
+                                                  │       (llama-3.1-8b-instant)         │
+                                                  │  - Senior QA Engineer System Persona │
+                                                  │  - Tool-grounded actionable code fix │
+                                                  └──────────────────┬───────────────────┘
+                                                                     │
+                                                                     ▼
+                                                  ┌──────────────────────────────────────┐
+                                                  │      VANILLA JS CLIENT DASHBOARD     │
+                                                  │  - Right-side slide-over drawer      │
+                                                  │  - Verdict-aware color-coded badges  │
+                                                  │  - LocalStorage caching & retry      │
+                                                  └──────────────────────────────────────┘
+      </div>
+
+      <h3>Technology Stack Summary</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Component</th><th>Technology</th><th>Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Backend Framework</strong></td><td>Python 3.11, FastAPI, Uvicorn</td><td>High-throughput REST API with async request handling</td></tr>
+            <tr><td><strong>Relational Database</strong></td><td>SQLite with SQLAlchemy ORM</td><td>Persistent test run history mounted on persistent disk <code>/data</code></td></tr>
+            <tr><td><strong>Vector Database</strong></td><td>Qdrant (Local / Cloud Client)</td><td>Semantic similarity search on failure stack traces & error messages</td></tr>
+            <tr><td><strong>LLM Inference</strong></td><td>Groq Cloud (Llama 3.1 8B Instant)</td><td>Sub-second root-cause diagnosis and framework-tailored code fixes</td></tr>
+            <tr><td><strong>Frontend Interface</strong></td><td>Single-file HTML5 / Vanilla CSS3 / Modern JS</td><td>Zero-build responsive UI, slide-over detail drawer, theme toggle</td></tr>
+            <tr><td><strong>Deployment</strong></td><td>Docker, Render Web Service, GitHub Actions</td><td>Memory-optimized container footprint (~35MB RAM)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 3: SCORING & VARIANCE ALGORITHM -->
+    <section id="algorithm" class="section-block">
+      <h2 class="section-title">📊 3. Flakiness Scoring & Step Variance Logic</h2>
+      <p class="section-subtitle">Mathematical formulation for flakiness scores, step variance, and verdict assignment.</p>
+
+      <h3>1. Transition-Based Flakiness Score Formula</h3>
+      <p>
+        Rather than calculating <code>failCount / totalRuns</code> (which incorrectly labels broken tests as flaky), our algorithm sorts chronological runs for a specific test and counts the number of <strong>state transitions</strong>:
+      </p>
+
+      <div class="code-header">Mathematical Logic (Python / JS Equivalent)</div>
+      <pre><code>def calculate_flakiness_score(runs: List[TestRun]) -> float:
+    # Requires at least 3 sequential runs to establish pattern
+    if len(runs) < 3:
+        return 0.0
+    
+    # Sort chronologically
+    sorted_runs = sorted(runs, key=lambda r: r.timestamp)
+    transitions = 0
+    
+    for i in range(1, len(sorted_runs)):
+        # Increment if status flips (pass -> fail OR fail -> pass)
+        if sorted_runs[i].status != sorted_runs[i-1].status:
+            transitions += 1
+            
+    # Normalize score between 0.0 (0%) and 1.0 (100%)
+    return transitions / (len(sorted_runs) - 1)</code></pre>
+
+      <h3>2. Verdict Classification Rules</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Verdict</th><th>Badge Color</th><th>Condition</th><th>Explanation</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-pass">Healthy / Stable</span></td>
+              <td>🟢 Green</td>
+              <td><code>failCount === 0</code></td>
+              <td>Test has 100% pass record across all monitored runs.</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-flaky">Likely Flaky</span></td>
+              <td>🟡 Amber</td>
+              <td><code>passCount > 0 AND failCount > 0</code></td>
+              <td>Test exhibits status flips. Non-deterministic timing, network, or environment issue.</td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-fail">Likely Real Bug</span></td>
+              <td>🔴 Red</td>
+              <td><code>passCount === 0 AND failCount > 0</code></td>
+              <td>Test fails consistently (100% fail rate). Points to genuine code regression or offline service.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>3. Step Variance Analysis</h3>
+      <p>
+        When multiple failures occur, the engine groups failures by step name or stack trace line to measure variance:
+      </p>
+      <ul>
+        <li><strong>Low Variance (&ge;75% at one step):</strong> <em>"Failures are concentrated at one step"</em> &rarr; Suggests a localized locator timeout, specific API failure, or missing element.</li>
+        <li><strong>High Variance (&lt;75% at top step):</strong> <em>"Failures occur at different steps each time"</em> &rarr; Suggests environment degradation, network latency jitter, or systemic auth token loss.</li>
+      </ul>
+    </section>
+
+    <!-- SECTION 4: AI ROOT-CAUSE ENGINE -->
+    <section id="ai-engine" class="section-block">
+      <h2 class="section-title">🤖 4. AI Root-Cause Engine & Prompt Engineering</h2>
+      <p class="section-subtitle">How Groq Llama 3.1 8B produces grounded, tool-specific code fixes.</p>
+
+      <p>
+        The analyzer feeds the failed test name, error message, stack trace, and top 5 vector similarity matches into Groq's <code>llama-3.1-8b-instant</code> with a strict persona prompt:
+      </p>
+
+      <div class="code-header">LLM Prompt Template (backend/src/services/root_cause_analyzer.py)</div>
+      <pre><code>SYSTEM_PROMPT = """You are a senior QA automation engineer.
+Analyze the provided test failure and output JSON with:
+1. "verdict": "likely_flaky" or "likely_real_bug"
+2. "root_cause_category": "timing/race_condition" | "environment" | "network" | "test_data" | "genuine_regression" | "unknown"
+3. "explanation": 2-3 sentences explaining why.
+4. "actionable_recommendation": Concrete code-level syntax fix tailored to the test automation tool.
+   - If Playwright: suggest specific locator waits e.g. await page.locator('#btn').waitFor({ state: 'visible' })
+   - If Selenium: suggest explicit WebDriverWait e.g. WebDriverWait(driver, 10).until(...)
+   - If Tosca: suggest WaitOn property configuration on Module attribute.
+"""</code></pre>
+
+      <h3>Granular Remediation Taxonomy</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Error Signature</th><th>Category</th><th>Tailored Actionable Fix Example</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>net::ERR_CONNECTION_REFUSED at http://localhost:3000</code></td>
+              <td>Server Connection Offline</td>
+              <td><em>"Target server at http://localhost:3000 was unreachable. Ensure dev server is started via <code>npm run dev</code> or configure <code>webServer</code> in playwright.config.ts."</em></td>
+            </tr>
+            <tr>
+              <td><code>ElementClickInterceptedException: overlay receiving click</code></td>
+              <td>UI Overlay Intercepted</td>
+              <td><em>"In step 'ClickSubmit', wait for overlay to detach: <code>await page.locator('.overlay').waitFor({ state: 'detached' })</code> and scroll into view."</em></td>
+            </tr>
+            <tr>
+              <td><code>TimeoutError: page.waitForSelector timeout 5000ms exceeded</code></td>
+              <td>Timing / Hydration</td>
+              <td><em>"Replace fixed sleep with explicit locator wait: <code>await page.locator('#target').waitFor({ state: 'visible', timeout: 15000 })</code>."</em></td>
+            </tr>
+            <tr>
+              <td><code>NetworkError: HTTP 503 Service Unavailable</code></td>
+              <td>Network / API Timeout</td>
+              <td><em>"Await backend response with retry: <code>await page.waitForResponse(r => r.url().includes('/api') && r.status() === 200)</code>."</em></td>
+            </tr>
+            <tr>
+              <td><code>login?reason=session_expired</code></td>
+              <td>Session Expiry</td>
+              <td><em>"Save and reuse authenticated browser state via <code>test.use({ storageState: 'auth.json' })</code> to maintain session across test workers."</em></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 5: DASHBOARD UI & UX -->
+    <section id="dashboard" class="section-block">
+      <h2 class="section-title">🎨 5. Interactive Dashboard UI & Features</h2>
+      <p class="section-subtitle">Single-file zero-dependency dashboard with enterprise usability enhancements.</p>
+
+      <div class="cards-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon">🗂️</div>
+          <div class="feature-card-title">Right-Side Slide-Over Drawer</div>
+          <div class="feature-card-text">Opens test analysis in a 720px fixed drawer with blurred backdrop. Eliminates all bottom scrolling across 100+ tests.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">🕒</div>
+          <div class="feature-card-title">Local Timezone Engine</div>
+          <div class="feature-card-text">Automatically converts server UTC timestamps into client's exact browser local time (e.g., <code>02 Sep 07:43 IST</code>).</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">⚡</div>
+          <div class="feature-card-title">LocalStorage Cache & Retries</div>
+          <div class="feature-card-text">Instant page load of 91+ cached runs with 4 progressive background retries to handle Render sleep transparently.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">🌓</div>
+          <div class="feature-card-title">Dark / Light Theme Toggle</div>
+          <div class="feature-card-text">Full palette toggle with CSS custom properties and 0.3s crossfade transitions, persisted to browser storage.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 6: MULTI-FRAMEWORK INGESTION -->
+    <section id="ingestion" class="section-block">
+      <h2 class="section-title">📥 6. Ingestion Pipeline & Multi-Framework Support</h2>
+      <p class="section-subtitle">How Playwright, Selenium, and Tosca feed into the detector without tag clutter.</p>
+
+      <h3>1. Automatic Tag Annotation Cleaner</h3>
+      <p>
+        Test runners frequently append tags like <code>@demo</code>, <code>@smoke</code>, or <code>@p1</code> to test titles. The ingestion layer applies <code>clean_test_name()</code> to strip tag suffixes so test names remain clean across all runs:
+      </p>
+
+      <div class="code-header">Tag Stripping Implementation (tools/junit_xml_to_ingest.py & backend/src/services/junit_parser.py)</div>
+      <pre><code>def clean_test_name(name: str) -> str:
+    """
+    Strips trailing Playwright tag annotations e.g.:
+    'checkout_submit_button_race_condition @demo' -> 'checkout_submit_button_race_condition'
+    'login_test @demo @smoke' -> 'login_test'
+    """
+    if not name:
+        return name
+    return re.sub(r'(?:\s+@[\w-]+)+$', '', name).strip()</code></pre>
+
+      <h3>2. Framework Ingestion Commands</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Framework</th><th>Execution Command</th><th>Ingestion Command</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Playwright</strong></td>
+              <td><code>npx playwright test --reporter=junit</code></td>
+              <td><code>python tools/junit_xml_to_ingest.py results/junit.xml --url $DETECTOR_URL/api/v1/test-runs/ingest</code></td>
+            </tr>
+            <tr>
+              <td><strong>Selenium (pytest)</strong></td>
+              <td><code>pytest --junitxml=results/junit.xml</code></td>
+              <td><code>python tools/junit_xml_to_ingest.py results/junit.xml --url $DETECTOR_URL/api/v1/test-runs/ingest</code></td>
+            </tr>
+            <tr>
+              <td><strong>Tricentis Tosca</strong></td>
+              <td>Tosca Server Execution API trigger</td>
+              <td><code>curl -X POST $DETECTOR_URL/api/v1/test-runs/ingest-junit -F file=@tosca_report.xml -F source_tool=tosca</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 7: DEPLOYMENT & DEVOPS -->
+    <section id="deployment" class="section-block">
+      <h2 class="section-title">☁️ 7. Render Deployment & 24/7 Keep-Awake</h2>
+      <p class="section-subtitle">How the backend is configured on Render Free Tier with zero cold-starts.</p>
+
+      <h3>1. Render Configuration & Memory Optimization</h3>
+      <ul>
+        <li><strong>Memory Footprint:</strong> Reduced from ~1.2GB down to <strong>~35MB RAM</strong> by removing heavy local PyTorch dependencies and utilizing Groq Cloud API for inference.</li>
+        <li><strong>Persistent Disk:</strong> Mounted at <code>/data</code> with environment variable <code>DB_PATH=/data/flaky_test_detector.db</code>. Survived restarts without data loss.</li>
+        <li><strong>One-Time Seed Marker:</strong> Checks <code>/data/.seeded</code> flag on startup so real CI test data is never overwritten by sample data.</li>
+      </ul>
+
+      <h3>2. Keep-Awake Cron Schedule (.github/workflows/keep-awake.yml)</h3>
+      <p>
+        Render free tier sleeps after 15 minutes of inactivity. Our scheduled GitHub Actions cron pings <code>/health</code> every 10 minutes:
+      </p>
+
+      <div class="code-header">Keep-Awake Workflow (.github/workflows/keep-awake.yml)</div>
+      <pre><code>name: Keep Render Backend Awake
+on:
+  schedule:
+    - cron: '*/10 * * * *' # Pings every 10 minutes
+  workflow_dispatch: {}
+
+jobs:
+  ping-health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Backend
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" --max-time 20 "https://flaky-test-detector-kbpc.onrender.com/health"</code></pre>
+    </section>
+
+    <!-- SECTION 8: FAST DEMO PLAYBOOK -->
+    <section id="fast-demo" class="section-block">
+      <h2 class="section-title">⚡ 8. Fast Demo Playbook (Under 15 Seconds)</h2>
+      <p class="section-subtitle">How to run a high-impact presentation demo without waiting 25 minutes.</p>
+
+      <div class="callout callout-success">
+        <span class="callout-icon">🎯</span>
+        <div>
+          <strong>Live Demo Workflow:</strong> Instead of running the full 25-minute test suite during a meeting, run the dedicated <code>LIVE DEMO — fast subset</code> workflow which executes in <strong>10–15 seconds</strong>.
+        </div>
+      </div>
+
+      <h3>Step-by-Step Presentation Script</h3>
+      <ol style="margin-left: 1.5rem; line-height: 1.8;">
+        <li><strong>Open Live Dashboard:</strong> Open <code>https://flaky-test-detector-kbpc.onrender.com/</code> and highlight the 4 summary metrics (Total, Flaky, Stable, Real Bugs).</li>
+        <li><strong>Trigger Fast Demo Workflow:</strong> Go to <a href="https://github.com/JNamu12/Flaky-Test-Detector/actions/workflows/live-demo-fast.yml" target="_blank">GitHub Actions ➔ LIVE DEMO — fast subset</a> and click <strong>"Run workflow"</strong>.</li>
+        <li><strong>Show Real-Time Ingestion:</strong> Point out that the pipeline finishes in ~15s and immediately streams results to Render.</li>
+        <li><strong>Open Slide-Over Drawer:</strong> Click on a flaky test row (e.g. <code>checkout_submit_button_race_condition</code>) to demonstrate:
+          <ul>
+            <li>Step Failure Breakdown with Variance Summary (<em>"Failures concentrated at one step"</em>).</li>
+            <li>Tool-tailored code recommendation (<em>"Replace fixed wait with <code>await page.locator('#target').waitFor()</code>"</em>).</li>
+            <li>Historical failure signature clusters.</li>
+          </ul>
+        </li>
+      </ol>
+    </section>
+
+    <!-- SECTION 9: PROMPTS ARCHIVE & EVOLUTION -->
+    <section id="prompt-history" class="section-block">
+      <h2 class="section-title">📜 9. Comprehensive Prompts & Development Archive</h2>
+      <p class="section-subtitle">Chronological record of all project prompts, engineering requests, and delivered solutions.</p>
+
+      <div id="prompts-list">
+        
+        <!-- Prompt 1-10 Summary -->
+        <div class="prompt-box open">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span>Phase 1: Project Foundation & Core Services (Prompts 1 – 16)</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <p><strong>Goal:</strong> Scaffolding full-stack project, Pydantic models, SQLite persistence, and Groq/Qdrant integrations.</p>
+            <ul>
+              <li><strong>Prompt 1-4:</strong> Initialize project repo, FastAPI app with CORS, requirements.txt, and environment templates.</li>
+              <li><strong>Prompt 6:</strong> Create <code>TestRun</code>, <code>TestRunBatch</code>, and <code>FlakyTestSummary</code> Pydantic models and SQLAlchemy schema.</li>
+              <li><strong>Prompt 7:</strong> Implement <code>generate_sample_data.py</code> creating 120 synthetic test runs across 18 tests.</li>
+              <li><strong>Prompt 8-10:</strong> Build ingestion endpoint <code>POST /api/v1/test-runs/ingest</code> and <code>calculate_flakiness_score()</code> transition formula.</li>
+              <li><strong>Prompt 11-13:</strong> Configure Groq Llama 3.1 8B root-cause analyzer and test analysis route <code>/api/v1/flaky-tests/{test_name}/analysis</code>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Prompt 17-30 -->
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span>Phase 2: Data Synthesis & Vanilla JS Dashboard (Prompts 17 – 36)</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <p><strong>Goal:</strong> Crafting standalone <code>dashboard.html</code> with dark theme, responsive stat cards, and error normalization.</p>
+            <ul>
+              <li><strong>Prompt 17-20:</strong> Enhanced data generator with realistic timing exceptions, stale element references, and business regression assertions.</li>
+              <li><strong>Prompt 21-27:</strong> Built self-contained <code>dashboard.html</code> with dark theme CSS custom variables and developer monospace font stack.</li>
+              <li><strong>Prompt 28-31:</strong> Implemented run history rectangle strips (last 14 runs), score badges, and pass/fail summary columns.</li>
+              <li><strong>Prompt 32-36:</strong> Created pure JS <code>normalizeError()</code> and <code>categorize()</code> keyword classifier with responsive mobile breakpoints.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Prompt 37-50 -->
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span>Phase 3: Multi-Tool JUnit Ingestion & Documentation (Prompts 37 – 50)</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <p><strong>Goal:</strong> Multi-framework support for Playwright, Selenium, and Tricentis Tosca XML reports.</p>
+            <ul>
+              <li><strong>Prompt 42:</strong> Authored Tosca Server Execution API integration guide and curl forwarding script.</li>
+              <li><strong>Prompt 43-44:</strong> Authored Playwright JUnit reporter guide and Selenium pytest / Maven / RobotFramework adapters.</li>
+              <li><strong>Prompt 45-46:</strong> Created automated GitHub Actions ingestion workflows and test fixtures.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Prompt 51-68 -->
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span>Phase 4: Optimization, Persistent Storage & Production Render Setup (Prompts 51 – 68)</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <p><strong>Goal:</strong> Eliminating 502 Bad Gateway OOM on Render, persistent SQLite disk storage, and date formatting.</p>
+            <ul>
+              <li><strong>Memory Optimization:</strong> Removed heavy PyTorch/SentenceTransformers packages; dropped RAM usage from >1GB to 35MB.</li>
+              <li><strong>Persistence:</strong> Added <code>/data/.seeded</code> marker to prevent sample seed data from overwriting real CI runs on container restart.</li>
+              <li><strong>Step Failure Variance:</strong> Extended analysis panel to show frequency breakdown per step and variance concentration summary.</li>
+              <li><strong>Actionable AI Suggestions:</strong> Updated root-cause analyzer prompt to output concrete code fixes for Playwright, Selenium, and Tosca.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Latest Prompts -->
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span>Phase 5: UI Polish, Slide-Over Drawer, Timezone & Demo Workflow (Latest Requests)</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <p><strong>Goal:</strong> Sidebar navigation, slide-over drawer UX, timezone conversion, tag cleaner, and fast demo workflow.</p>
+            <ul>
+              <li><strong>Sidebar & Layout:</strong> Wrapped page in <code>.layout</code> with left navigation sidebar and dark/light theme switcher with localStorage persistence.</li>
+              <li><strong>Slide-Over Drawer:</strong> Converted bottom detail view into a fixed 720px right-side drawer with backdrop blur to eliminate scrolling.</li>
+              <li><strong>Local Timezone Parser:</strong> Added <code>parseUTCDate()</code> to convert server UTC timestamps to user's exact local browser time (e.g. <code>07:44 IST</code>).</li>
+              <li><strong>Verdict Badge Colors:</strong> Configured score badge color to reflect actual verdict (Green = Always passing, Amber = Flaky, Red = Real bug) rather than 0% flip score.</li>
+              <li><strong>Tag Cleaner:</strong> Added <code>clean_test_name()</code> to strip <code>@demo</code>, <code>@smoke</code> tag annotations during XML parsing.</li>
+              <li><strong>Fast Live Demo Workflow:</strong> Created <code>LIVE DEMO — fast subset</code> workflow running <code>npx playwright test --grep @demo</code> in 15 seconds.</li>
+              <li><strong>Keep-Awake Cron:</strong> Added scheduled GitHub Actions cron to ping <code>/health</code> every 10 minutes to eliminate Render cold-starts.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 10: TROUBLESHOOTING & QA LOG -->
+    <section id="troubleshooting" class="section-block">
+      <h2 class="section-title">🛠️ 10. QA & Troubleshooting Log</h2>
+      <p class="section-subtitle">Common questions, edge cases, and architectural fixes resolved during development.</p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Issue Observed</th><th>Root Cause</th><th>Resolution Applied</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Render 502 Bad Gateway / OOM</strong></td>
+              <td>SentenceTransformers loaded PyTorch models exceeding 512MB RAM free limit.</td>
+              <td>Removed local PyTorch; switched to Groq Cloud API and optimized Docker container to ~35MB RAM.</td>
+            </tr>
+            <tr>
+              <td><strong>Real Data Lost on Restart</strong></td>
+              <td>Default SQLite path was in container ephemeral storage and seed script ran on every boot.</td>
+              <td>Mounted persistent volume at <code>/data</code> and added one-time <code>.seeded</code> guard file.</td>
+            </tr>
+            <tr>
+              <td><strong>Timestamp Showed 02:13 Instead of 07:44</strong></td>
+              <td>Browser parsed UTC string without explicit 'Z' as naive local time.</td>
+              <td>Implemented <code>parseUTCDate()</code> to enforce UTC parsing before converting to browser local time.</td>
+            </tr>
+            <tr>
+              <td><strong>Tag '@demo' Appeared in Test Names</strong></td>
+              <td>Playwright tags in test title were ingested literally.</td>
+              <td>Created regex cleaner <code>re.sub(r'(?:\s+@[\w-]+)+$', '', name)</code> in parser layer.</td>
+            </tr>
+            <tr>
+              <td><strong>User Had to Scroll Down to View Analysis</strong></td>
+              <td>Detail panel was placed at bottom of 100+ row table.</td>
+              <td>Transformed panel into modern right-side fixed slide-over drawer with backdrop blur.</td>
+            </tr>
+            <tr>
+              <td><strong>Render Slept During Presentations</strong></td>
+              <td>Render Free Tier spins down after 15 minutes of zero traffic.</td>
+              <td>Added <code>keep-awake.yml</code> GitHub Actions workflow to ping <code>/health</code> every 10 minutes.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>🧪 <strong>Flaky Test Detector</strong> • Internal Engineering Knowledge Transfer (KT) Document</p>
+      <p style="margin-top:0.35rem;font-size:0.78rem;color:var(--text-soft);">Generated for Demo Readiness & Architectural Permanence • September 2026</p>
+    </footer>
+
+  </main>
+
+  <script>
+    function togglePrompt(headerEl) {
+      const parent = headerEl.parentElement;
+      parent.classList.toggle('open');
+    }
+
+    function filterSidebar(query) {
+      const q = query.toLowerCase();
+      const items = document.querySelectorAll('#sidebar-menu .nav-item');
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    // Highlight active nav item on scroll
+    window.addEventListener('scroll', () => {
+      const sections = document.querySelectorAll('section');
+      const scrollPos = window.scrollY + 120;
+      sections.forEach(sec => {
+        if (scrollPos >= sec.offsetTop && scrollPos < sec.offsetTop + sec.offsetHeight) {
+          const id = sec.getAttribute('id');
+          document.querySelectorAll('.sidebar-nav .nav-item').forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
