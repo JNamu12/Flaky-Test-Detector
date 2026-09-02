@@ -72,42 +72,6 @@ test('test_flaky_connection_2 @demo', async ({ page }) => {
   }
 });
 
-test('test_flaky_connection_3 @demo', async ({ page }) => {
-  /**
-   * Simulates: intermittent 503 Service Unavailable from payment microservice.
-   * Each workflow run has ~50% chance of passing or failing — true flakiness.
-   * Expected detector verdict: likely_flaky | Amber badge
-   */
-  await page.goto('https://example.com');
-  await expect(page).toHaveTitle(/Example Domain/);
-
-  if (Math.random() < 0.5) {
-    throw new Error(
-      'NetworkError: HTTP 503 Service Unavailable — GET /api/v1/payments/status. ' +
-      'Response timeout after 30048ms. Retry-After: 5s. ' +
-      'Service experiencing high load on CI infrastructure (step: verifyPaymentStatus).'
-    );
-  }
-});
-
-test('test_flaky_connection_4 @demo', async ({ page }) => {
-  /**
-   * Simulates: intermittent session token expiry during long-running test.
-   * Each workflow run has ~50% chance of passing or failing — true flakiness.
-   * Expected detector verdict: likely_flaky | Amber badge
-   */
-  await page.goto('https://example.com');
-  await expect(page).toHaveTitle(/Example Domain/);
-
-  if (Math.random() < 0.5) {
-    throw new Error(
-      'AssertionError: expect(received).toContain(expected). ' +
-      'Expected page URL to contain "/dashboard" but received "/login?reason=session_expired". ' +
-      'Auth token expired mid-test due to slow CI environment startup (step: verifySessionActive).'
-    );
-  }
-});
-
 // ============================================================================
 // CATEGORY 1 — TIMING / RACE CONDITION
 // ============================================================================
