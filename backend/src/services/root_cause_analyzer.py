@@ -34,23 +34,17 @@ You are a senior QA automation engineer reviewing a failing test report for a co
 Your job: explain EXACTLY what failed and give a SPECIFIC, COPY-PASTE ready fix.
 Write as if you are sitting next to a junior QA engineer and walking them through it step by step.
 
-=== RULES FOR "explanation" (max 120 words) ===
-- Start with the failing STEP name if visible in the error (e.g. "In step loginStep, ...").
-- Say WHY this specific error occurs — not just what the error type is called.
-- State clearly: is it FLAKY (intermittent, non-deterministic) or a REAL BUG (always fails)?
-- Be factual. Only mention what is visible in the error message and stack trace.
+=== RULES FOR "explanation" (MAX 40 WORDS) ===
+- Start with the failing STEP name if in the error (e.g. "In loginStep, ...").
+- One sentence: WHY did it fail? Is it FLAKY (intermittent) or a REAL BUG (always fails)?
+- No filler words.
 
-=== RULES FOR "suggested_next_step" (max 150 words) ===
-- MUST be tailored to the EXACT testing tool (Playwright / Selenium / Tosca / Cypress / Pytest).
-- MUST reference the EXACT failing step name and the EXACT selector, URL, or API endpoint from the error.
-- MUST include a working code snippet in the correct tool syntax. For example:
-    Playwright : await page.locator('#user-avatar').waitFor({ state: 'visible', timeout: 10000 });
-    Selenium   : WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, 'user-avatar')))
-    Tosca      : On Module 'UserAvatar', set WaitOn=Enabled and SynchronizationTimeout=10000
-- If the error is a NETWORK / HTTP error: suggest adding a retry wrapper or page.route() intercept for that specific endpoint.
-- If the error is a SESSION / AUTH error: suggest adding a beforeEach hook to refresh the auth token before that step.
-- NEVER say "add a wait" or "check the logs" without specifying EXACTLY where and what to wait for.
-- If no selector is visible in the error, say so explicitly and suggest enabling Playwright trace viewer or HAR capture for that step.
+=== RULES FOR "suggested_next_step" (MAX 50 WORDS + 1 CODE LINE) ===
+- One clear action sentence + one code snippet. Nothing else.
+- Use the EXACT tool syntax (Playwright / Selenium / Tosca).
+- Reference the EXACT step name and selector/endpoint from the error.
+- Example output: "In loginStep, wait for #user-avatar before asserting:\n  await page.locator('#user-avatar').waitFor({ state: 'visible', timeout: 8000 });"
+- If no selector visible: say so in one line and suggest enabling trace viewer.
 
 === OUTPUT FORMAT ===
 Output ONLY a valid JSON object. No markdown. No backticks. No extra text. Keys must be exactly:
@@ -142,29 +136,15 @@ def _heuristic_fallback(
         endpoint = selector or "/api/v1/..."
         if tool == "Playwright":
             fix = (
-                f"In {step_label}, the request to `{endpoint}` got an intermittent 503. "
-                f"Add a response wait before asserting:\n"
-                f"  await page.waitForResponse(\n"
-                f"    resp => resp.url().includes('{endpoint.split('/')[-1]}') && resp.status() === 200,\n"
-                f"    {{ timeout: 15000 }}\n"
-                f"  );\n"
-                f"Or mock the endpoint to avoid CI dependency:\n"
-                f"  await page.route('**{endpoint}', route => route.fulfill({{ status: 200, body: '{{\"ok\":true}}' }}));"
+                f"In {step_label}, mock the flaky endpoint to avoid CI dependency:\n"
+                f"  await page.route('**{selector or '/api/v1/...'}', route => route.fulfill({{ status: 200, body: '{{\"ok\":true}}' }}));"
             )
         elif tool == "Selenium":
             fix = (
-                f"In {step_label}, wrap the API call to `{endpoint}` in a retry loop:\n"
-                f"  for attempt in range(3):\n"
-                f"      try:\n"
-                f"          response = requests.get('{endpoint}', timeout=10)\n"
-                f"          response.raise_for_status(); break\n"
-                f"      except: time.sleep(2)"
+                f"In {step_label}, retry the call to `{selector or endpoint}` up to 3 times with 2s backoff before asserting."
             )
         else:
-            fix = (
-                f"In {step_label}, the endpoint `{endpoint}` returned HTTP 503. "
-                f"Add a polling retry with exponential backoff (max 3 attempts, 2s apart) before asserting the response."
-            )
+            fix = f"In {step_label}, add a retry (max 3, 2s delay) for `{selector or 'the endpoint'}` before asserting."
         return json.dumps({
             "verdict": "likely_flaky",
             "root_cause_category": "network",
@@ -191,32 +171,19 @@ def _heuristic_fallback(
         elif tool == "Selenium":
             sel_css = selector or '#target-element'
             fix = (
-                f"In {step_label}, replace any `time.sleep()` before{sel_label} with:\n"
-                f"  element = WebDriverWait(driver, 10).until(\n"
-                f"      EC.element_to_be_clickable((By.CSS_SELECTOR, '{sel_css}'))\n"
-                f"  )\n"
-                f"  element.click()\n"
-                f"This waits until the element is both visible AND clickable, not just present in the DOM."
+                f"In {step_label}, replace sleep with:\n"
+                f"  WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '{sel_css}')))"
             )
         elif tool == "Tosca":
-            fix = (
-                f"In {step_label}{sel_label}, open the Module in Tosca Studio and set:\n"
-                f"  WaitOn = Enabled\n"
-                f"  SynchronizationTimeout = 10000\n"
-                f"This tells Tosca to wait for the control to be ready before executing the action, eliminating the timing race."
-            )
+            fix = f"In {step_label}{sel_label}, set WaitOn=Enabled and SynchronizationTimeout=10000 in Tosca Studio."
         else:
-            fix = (
-                f"In {step_label}{sel_label}, add an explicit wait for the element to be visible before the action. "
-                f"Capture a DOM snapshot and HAR network log at the time of failure to confirm the element state."
-            )
+            fix = f"In {step_label}, add an explicit wait for {selector or 'the element'} to be visible, then run with --trace on."
         return json.dumps({
             "verdict": "likely_flaky",
             "root_cause_category": "timing/race_condition",
             "explanation": (
-                f"In {step_label}, the element{sel_label} was not ready within the timeout. "
-                f"This is a classic async race condition — the test tried to interact with the element before "
-                f"the page/DOM finished rendering or the animation/overlay settled. Happens intermittently on slower CI runners."
+                f"In {step_label}, {selector or 'the element'} was not ready within the timeout — "
+                f"async race condition. Happens intermittently on CI runners."
             ),
             "suggested_next_step": fix
         })
@@ -225,23 +192,11 @@ def _heuristic_fallback(
     if "session_expired" in err_lower or ("login" in err_lower and "redirect" in err_lower) or "auth" in err_lower:
         if tool == "Playwright":
             fix = (
-                f"In {step_label}, the test was redirected to /login because the auth session expired. Fix options:\n"
-                f"Option A — Refresh cookie in beforeEach:\n"
-                f"  test.beforeEach(async ({{ page }}) => {{\n"
-                f"    await page.context().addCookies([{{\n"
-                f"      name: 'auth_token', value: process.env.AUTH_TOKEN,\n"
-                f"      domain: 'yourapp.com', path: '/'\n"
-                f"    }}]);\n"
-                f"  }});\n"
-                f"Option B — Use storageState to reuse authenticated session:\n"
-                f"  use: {{ storageState: 'auth-state.json' }}"
+                f"In {step_label}, refresh auth before this step:\n"
+                f"  test.beforeEach(async ({{ page }}) => {{ await page.context().addCookies([{{ name: 'auth_token', value: process.env.AUTH_TOKEN, domain: 'yourapp.com', path: '/' }}]); }});"
             )
         else:
-            fix = (
-                f"In {step_label}, the auth token expired mid-test. "
-                f"Add a setUp() hook that re-authenticates and injects a fresh session cookie before this step runs. "
-                f"Also increase the session TTL in the CI test environment config to at least 5 minutes."
-            )
+            fix = f"In {step_label}, re-authenticate in setUp() before this step or extend session TTL in CI config."
         return json.dumps({
             "verdict": "likely_flaky",
             "root_cause_category": "environment",
@@ -262,26 +217,11 @@ def _heuristic_fallback(
     )
     if is_real_bug:
         if tool == "Playwright":
-            fix = (
-                f"In {step_label}, the assertion consistently fails. Steps to investigate:\n"
-                f"1. Run `npx playwright test --debug` to step through the test interactively.\n"
-                f"2. Use `await page.route()` to inspect the actual API response shape:\n"
-                f"   await page.route('**/api/**', route => {{ console.log(route.request().url()); route.continue(); }});\n"
-                f"3. Check recent commits for changes to the backend response schema or frontend assertion logic."
-            )
+            fix = f"Run with --debug to step through. Check recent commits for schema changes around {step_label}."
         elif tool == "Selenium":
-            fix = (
-                f"In {step_label}, the assertion consistently fails. "
-                f"Add `print(driver.find_element(By.CSS_SELECTOR, '{selector or '#element'}').text)` "
-                f"to log the actual value, then compare with the expected. "
-                f"Check recent commits for changes to the business logic or data model."
-            )
+            fix = f"Log actual value: print(driver.find_element(By.CSS_SELECTOR, '{selector or '#element'}').text). Check recent commits."
         else:
-            fix = (
-                f"In {step_label}, this is a consistent failure indicating a regression. "
-                f"Inspect recent commits for changes to the underlying business logic or data schema. "
-                f"Log actual vs expected values in the test output to pinpoint the mismatch."
-            )
+            fix = f"In {step_label}, compare actual vs expected in logs. Check recent commits for logic or data model changes."
         return json.dumps({
             "verdict": "likely_real_bug",
             "root_cause_category": "genuine_regression",
@@ -329,8 +269,8 @@ def _call_groq(
     payload = {
         "model": MODEL_NAME,
         "messages": messages,
-        "temperature": 0.2,    # Low = consistent, precise, not creative/generic
-        "max_tokens": 700,     # Enough for step-specific explanation + full code snippet
+        "temperature": 0.1,    # Very low = consistent, deterministic, no fluff
+        "max_tokens": 300,     # Short & sharp — one explanation + one code line
     }
     response = httpx.post(API_URL, json=payload, headers=headers, timeout=30.0)
     response.raise_for_status()
