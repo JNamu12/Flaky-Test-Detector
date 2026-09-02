@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flaky Test Detector — Complete Knowledge Transfer (KT) & Architecture Guide</title>
+  <title>Flaky Test Detector — Complete Knowledge Transfer (KT) & Technical Master Document</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,7 +14,6 @@
       --primary-light: #EFF6FF;
       --primary-border: #BFDBFE;
       --accent-blue: #3B82F6;
-      --accent-cyan: #06B6D4;
       --sidebar-bg: linear-gradient(180deg, #EBF3FA 0%, #D8E7F6 100%);
       --sidebar-border: #CBD5E1;
       --sidebar-text: #1E293B;
@@ -23,9 +22,7 @@
       
       --bg: #F8FAFC;
       --surface: #FFFFFF;
-      --surface-elevated: #FFFFFF;
       --border: #E2E8F0;
-      --border-subtle: #F1F5F9;
       
       --text-main: #0F172A;
       --text-muted: #475569;
@@ -34,15 +31,12 @@
       --teal-bg: #ECFDF5;
       --teal-border: #A7F3D0;
       --teal-text: #065F46;
-      --teal-base: #10B981;
       --amber-bg: #FFFBEB;
       --amber-border: #FDE68A;
       --amber-text: #92400E;
-      --amber-base: #F59E0B;
       --coral-bg: #FEF2F2;
       --coral-border: #FECACA;
       --coral-text: #991B1B;
-      --coral-base: #EF4444;
       --code-bg: #0F172A;
       --code-text: #F8FAFC;
       --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -60,18 +54,14 @@
       min-height: 100vh;
     }
 
-    /* ── Sidebar Navigation ─────────────────────────────────────────── */
     .sidebar {
-      width: 300px;
+      width: 310px;
       flex-shrink: 0;
       background: var(--sidebar-bg);
       border-right: 1px solid var(--sidebar-border);
       position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      display: flex;
-      flex-direction: column;
+      top: 0; left: 0; bottom: 0;
+      display: flex; flex-direction: column;
       z-index: 100;
       overflow-y: auto;
       box-shadow: 2px 0 12px rgba(0, 0, 0, 0.03);
@@ -82,903 +72,761 @@
       border-bottom: 1px solid rgba(203, 213, 225, 0.6);
       background: rgba(255, 255, 255, 0.5);
       backdrop-filter: blur(8px);
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      position: sticky; top: 0; z-index: 10;
     }
 
     .sidebar-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: var(--primary);
-      letter-spacing: -0.01em;
+      display: flex; align-items: center; gap: 0.65rem;
+      font-size: 1.15rem; font-weight: 800; color: var(--primary);
     }
 
     .sidebar-subtitle {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin-top: 0.25rem;
-      font-weight: 500;
+      font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem; font-weight: 500;
     }
 
-    .sidebar-search {
-      margin-top: 0.9rem;
-      position: relative;
-    }
-
+    .sidebar-search { margin-top: 0.9rem; position: relative; }
     .sidebar-search input {
-      width: 100%;
-      padding: 0.45rem 0.75rem 0.45rem 2rem;
-      border-radius: 0.5rem;
-      border: 1px solid #CBD5E1;
-      font-size: 0.82rem;
-      background: #FFFFFF;
-      outline: none;
-      font-family: var(--font-sans);
-      transition: all 0.2s ease;
+      width: 100%; padding: 0.45rem 0.75rem 0.45rem 2rem;
+      border-radius: 0.5rem; border: 1px solid #CBD5E1;
+      font-size: 0.82rem; background: #FFFFFF; outline: none;
+      font-family: var(--font-sans); transition: all 0.2s ease;
     }
-
     .sidebar-search input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
-
     .sidebar-search svg {
-      position: absolute;
-      left: 0.65rem;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 14px;
-      height: 14px;
-      color: var(--text-soft);
+      position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%);
+      width: 14px; height: 14px; color: var(--text-soft);
     }
 
     .sidebar-nav {
       padding: 1rem 0.75rem 2rem 0.75rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      flex: 1;
+      display: flex; flex-direction: column; gap: 0.25rem; flex: 1;
     }
 
     .nav-group-title {
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-muted);
       padding: 0.75rem 0.65rem 0.35rem 0.65rem;
     }
 
     .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      padding: 0.55rem 0.75rem;
-      border-radius: 0.5rem;
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: var(--sidebar-text);
-      text-decoration: none;
-      transition: all 0.2s ease;
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.55rem 0.75rem; border-radius: 0.5rem;
+      font-size: 0.86rem; font-weight: 600; color: var(--sidebar-text);
+      text-decoration: none; transition: all 0.2s ease;
     }
-
     .nav-item:hover {
-      background: rgba(255, 255, 255, 0.7);
-      color: var(--primary);
-      transform: translateX(2px);
+      background: rgba(255, 255, 255, 0.7); color: var(--primary); transform: translateX(2px);
     }
-
     .nav-item.active {
-      background: var(--sidebar-active-bg);
-      color: var(--sidebar-active-text);
-      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08);
-      border-left: 3px solid var(--primary);
+      background: var(--sidebar-active-bg); color: var(--sidebar-active-text);
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08); border-left: 3px solid var(--primary);
     }
 
-    /* ── Main Content Area ──────────────────────────────────────────── */
     .content-wrapper {
-      margin-left: 300px;
-      flex: 1;
-      padding: 2.5rem 3.5rem;
-      max-width: 1250px;
+      margin-left: 310px; flex: 1; padding: 2.5rem 3.5rem; max-width: 1250px;
     }
 
-    /* ── Hero Header ────────────────────────────────────────────────── */
     .hero-header {
       background: linear-gradient(135deg, #FFFFFF 0%, #EFF6FF 100%);
       border: 1px solid var(--primary-border);
-      border-radius: 1rem;
-      padding: 2.5rem;
-      margin-bottom: 3rem;
-      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.05);
-      position: relative;
-      overflow: hidden;
+      border-radius: 1rem; padding: 2.5rem; margin-bottom: 3rem;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.05); position: relative; overflow: hidden;
     }
-
-    .hero-header::after {
-      content: '';
-      position: absolute;
-      right: -40px;
-      top: -40px;
-      width: 180px;
-      height: 180px;
-      background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
-      border-radius: 50%;
-    }
-
     .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      background: var(--primary-light);
-      border: 1px solid var(--primary-border);
-      color: var(--primary);
-      font-size: 0.8rem;
-      font-weight: 700;
-      padding: 0.25rem 0.75rem;
-      border-radius: 999px;
-      margin-bottom: 1rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: var(--primary-light); border: 1px solid var(--primary-border);
+      color: var(--primary); font-size: 0.8rem; font-weight: 700;
+      padding: 0.25rem 0.75rem; border-radius: 999px; margin-bottom: 1rem;
+      text-transform: uppercase; letter-spacing: 0.05em;
     }
-
     .hero-title {
-      font-size: 2.3rem;
-      font-weight: 800;
-      color: #0F172A;
-      letter-spacing: -0.02em;
-      line-height: 1.2;
-      margin-bottom: 0.75rem;
+      font-size: 2.3rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 0.75rem;
     }
-
-    .hero-description {
-      font-size: 1.05rem;
-      color: var(--text-muted);
-      max-width: 850px;
-      line-height: 1.6;
-    }
-
+    .hero-description { font-size: 1.05rem; color: var(--text-muted); max-width: 850px; line-height: 1.6; }
     .hero-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      margin-top: 1.5rem;
-      padding-top: 1.25rem;
-      border-top: 1px solid rgba(191, 219, 254, 0.5);
-      font-size: 0.85rem;
-      color: var(--text-muted);
+      display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.5rem;
+      padding-top: 1.25rem; border-top: 1px solid rgba(191, 219, 254, 0.5);
+      font-size: 0.85rem; color: var(--text-muted);
     }
 
-    .hero-meta-item {
-      display: flex;
-      align-items: center;
-      gap: 0.45rem;
-      font-weight: 500;
-    }
-
-    /* ── Content Sections ───────────────────────────────────────────── */
     .section-block {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 0.85rem;
-      padding: 2.25rem;
-      margin-bottom: 2.5rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-      scroll-margin-top: 2rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 0.85rem; padding: 2.25rem; margin-bottom: 2.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02); scroll-margin-top: 2rem;
     }
-
     .section-title {
-      font-size: 1.55rem;
-      font-weight: 800;
-      color: #0F172A;
-      letter-spacing: -0.02em;
-      margin-bottom: 0.6rem;
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      border-bottom: 2px solid var(--primary-light);
-      padding-bottom: 0.75rem;
+      font-size: 1.55rem; font-weight: 800; color: #0F172A; letter-spacing: -0.02em;
+      margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.65rem;
+      border-bottom: 2px solid var(--primary-light); padding-bottom: 0.75rem;
     }
+    .section-subtitle { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; }
 
-    .section-subtitle {
-      font-size: 0.95rem;
-      color: var(--text-muted);
-      margin-bottom: 1.5rem;
-    }
+    h3 { font-size: 1.18rem; font-weight: 700; color: #1E293B; margin: 1.6rem 0 0.75rem 0; }
+    h4 { font-size: 1rem; font-weight: 700; color: #334155; margin: 1.2rem 0 0.5rem 0; }
+    p { margin-bottom: 1rem; color: var(--text-main); font-size: 0.96rem; }
 
-    h3 {
-      font-size: 1.18rem;
-      font-weight: 700;
-      color: #1E293B;
-      margin: 1.6rem 0 0.75rem 0;
-      display: flex;
-      align-items: center;
-      gap: 0.45rem;
-    }
-
-    h4 {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #334155;
-      margin: 1.2rem 0 0.5rem 0;
-    }
-
-    p {
-      margin-bottom: 1rem;
-      color: var(--text-main);
-      font-size: 0.96rem;
-    }
-
-    /* ── Callout Boxes ──────────────────────────────────────────────── */
     .callout {
-      padding: 1.1rem 1.3rem;
-      border-radius: 0.65rem;
-      margin: 1.25rem 0;
-      font-size: 0.92rem;
-      line-height: 1.55;
-      display: flex;
-      gap: 0.85rem;
-      align-items: flex-start;
+      padding: 1.1rem 1.3rem; border-radius: 0.65rem; margin: 1.25rem 0;
+      font-size: 0.92rem; line-height: 1.55; display: flex; gap: 0.85rem; align-items: flex-start;
     }
-
     .callout-info { background: #EFF6FF; border-left: 4px solid #3B82F6; color: #1E40AF; }
     .callout-success { background: var(--teal-bg); border-left: 4px solid #10B981; color: var(--teal-text); }
     .callout-warning { background: var(--amber-bg); border-left: 4px solid #F59E0B; color: var(--amber-text); }
     .callout-danger { background: var(--coral-bg); border-left: 4px solid #EF4444; color: var(--coral-text); }
     .callout-icon { font-size: 1.2rem; line-height: 1; flex-shrink: 0; }
 
-    /* ── Tables ─────────────────────────────────────────────────────── */
     .table-container {
-      width: 100%;
-      overflow-x: auto;
-      margin: 1.25rem 0;
-      border: 1px solid var(--border);
-      border-radius: 0.5rem;
+      width: 100%; overflow-x: auto; margin: 1.25rem 0;
+      border: 1px solid var(--border); border-radius: 0.5rem;
     }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.88rem;
-      text-align: left;
-    }
-
-    thead {
-      background: #F1F5F9;
-      color: #334155;
-      font-weight: 700;
-    }
-
-    th, td {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border);
-    }
-
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left; }
+    thead { background: #F1F5F9; color: #334155; font-weight: 700; }
+    th, td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
     tr:last-child td { border-bottom: none; }
     tbody tr:hover { background: #F8FAFC; }
 
-    /* ── Badges ─────────────────────────────────────────────────────── */
     .badge {
-      display: inline-block;
-      padding: 0.2rem 0.55rem;
-      border-radius: 0.35rem;
-      font-size: 0.78rem;
-      font-weight: 700;
-      font-family: var(--font-mono);
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
+      display: inline-block; padding: 0.2rem 0.55rem; border-radius: 0.35rem;
+      font-size: 0.78rem; font-weight: 700; font-family: var(--font-mono);
+      text-transform: uppercase; letter-spacing: 0.03em;
     }
-
     .badge-pass { background: var(--teal-bg); border: 1px solid var(--teal-border); color: var(--teal-text); }
     .badge-flaky { background: var(--amber-bg); border: 1px solid var(--amber-border); color: var(--amber-text); }
     .badge-fail { background: var(--coral-bg); border: 1px solid var(--coral-border); color: var(--coral-text); }
     .badge-blue { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; }
 
-    /* ── Code Blocks ────────────────────────────────────────────────── */
     pre {
-      background: var(--code-bg);
-      color: var(--code-text);
-      padding: 1.25rem;
-      border-radius: 0.65rem;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      line-height: 1.6;
-      overflow-x: auto;
-      margin: 1.1rem 0;
-      position: relative;
+      background: var(--code-bg); color: var(--code-text);
+      padding: 1.25rem; border-radius: 0.65rem; font-family: var(--font-mono);
+      font-size: 0.85rem; line-height: 1.6; overflow-x: auto; margin: 1.1rem 0;
     }
-
     code {
-      font-family: var(--font-mono);
-      font-size: 0.87em;
-      background: #EEF2F6;
-      color: #0F172A;
-      padding: 0.15rem 0.35rem;
-      border-radius: 0.25rem;
-      border: 1px solid #E2E8F0;
+      font-family: var(--font-mono); font-size: 0.87em; background: #EEF2F6;
+      color: #0F172A; padding: 0.15rem 0.35rem; border-radius: 0.25rem; border: 1px solid #E2E8F0;
     }
-
     pre code { background: transparent; color: inherit; padding: 0; border: none; }
 
     .code-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #1E293B;
-      color: #94A3B8;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      padding: 0.45rem 1rem;
-      border-top-left-radius: 0.65rem;
-      border-top-right-radius: 0.65rem;
-      margin-bottom: -1.1rem;
+      display: flex; justify-content: space-between; align-items: center;
+      background: #1E293B; color: #94A3B8; font-family: var(--font-mono);
+      font-size: 0.78rem; padding: 0.45rem 1rem; border-top-left-radius: 0.65rem;
+      border-top-right-radius: 0.65rem; margin-bottom: -1.1rem;
     }
-
     .code-header + pre { border-top-left-radius: 0; border-top-right-radius: 0; }
 
-    /* ── Feature Cards Grid ─────────────────────────────────────────── */
     .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.25rem;
-      margin: 1.5rem 0;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem; margin: 1.5rem 0;
     }
-
     .feature-card {
-      background: #FFFFFF;
-      border: 1px solid var(--border);
-      border-radius: 0.65rem;
-      padding: 1.35rem;
-      transition: all 0.2s ease;
-      position: relative;
-      border-top: 3px solid var(--accent-blue);
+      background: #FFFFFF; border: 1px solid var(--border); border-radius: 0.65rem;
+      padding: 1.35rem; transition: all 0.2s ease; position: relative; border-top: 3px solid var(--accent-blue);
     }
-
-    .feature-card:hover {
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08);
-      transform: translateY(-2px);
-    }
-
+    .feature-card:hover { box-shadow: 0 6px 16px rgba(37, 99, 235, 0.08); transform: translateY(-2px); }
     .feature-card-icon { font-size: 1.5rem; margin-bottom: 0.6rem; }
     .feature-card-title { font-size: 1.05rem; font-weight: 700; color: #0F172A; margin-bottom: 0.4rem; }
     .feature-card-text { font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; }
 
-    /* ── SVG Diagrams & Flowcharts ──────────────────────────────────── */
     .diagram-container {
-      background: #FFFFFF;
-      border: 1px solid #CBD5E1;
-      border-radius: 0.75rem;
-      padding: 1.5rem;
-      margin: 1.5rem 0;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-      overflow-x: auto;
+      background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 0.75rem;
+      padding: 1.5rem; margin: 1.5rem 0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); overflow-x: auto;
     }
-
     .diagram-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #1E293B;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      font-size: 0.95rem; font-weight: 700; color: #1E293B; margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
     }
+    svg.flow-svg { width: 100%; min-width: 700px; height: auto; display: block; }
 
-    svg.flow-svg {
-      width: 100%;
-      min-width: 700px;
-      height: auto;
-      display: block;
-    }
-
-    /* ── Interactive Workflow Tabs ──────────────────────────────────── */
     .tabs-nav {
-      display: flex;
-      gap: 0.5rem;
-      border-bottom: 2px solid var(--border);
-      margin-bottom: 1rem;
-      overflow-x: auto;
+      display: flex; gap: 0.5rem; border-bottom: 2px solid var(--border); margin-bottom: 1rem; overflow-x: auto;
     }
-
     .tab-btn {
-      padding: 0.6rem 1.1rem;
-      border: none;
-      background: transparent;
-      font-family: var(--font-sans);
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-      transition: all 0.2s ease;
-      white-space: nowrap;
+      padding: 0.6rem 1.1rem; border: none; background: transparent;
+      font-family: var(--font-sans); font-size: 0.88rem; font-weight: 600;
+      color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -2px; transition: all 0.2s ease; white-space: nowrap;
     }
-
     .tab-btn:hover { color: var(--primary); }
     .tab-btn.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-      background: var(--primary-light);
-      border-top-left-radius: 0.4rem;
-      border-top-right-radius: 0.4rem;
+      color: var(--primary); border-bottom-color: var(--primary); background: var(--primary-light);
+      border-top-left-radius: 0.4rem; border-top-right-radius: 0.4rem;
     }
-
     .tab-pane { display: none; }
     .tab-pane.active { display: block; }
 
-    /* ── UI Wireframe Mockup Simulation ─────────────────────────────── */
-    .mockup-window {
-      background: #0F172A;
-      border-radius: 0.75rem;
-      border: 1px solid #334155;
-      overflow: hidden;
-      margin: 1.5rem 0;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    .mockup-header {
-      background: #1E293B;
-      padding: 0.65rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      border-bottom: 1px solid #334155;
-    }
-
-    .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot-red { background: #EF4444; }
-    .dot-yellow { background: #F59E0B; }
-    .dot-green { background: #10B981; }
-    .mockup-title { font-size: 0.75rem; font-family: var(--font-mono); color: #94A3B8; margin-left: 0.5rem; }
-
-    .mockup-body { padding: 1.25rem; background: #0B1120; color: #E2E8F0; font-size: 0.85rem; }
-
-    .mockup-stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.75rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .mockup-stat-card {
-      background: #1E293B;
-      border: 1px solid #334155;
-      border-radius: 0.5rem;
-      padding: 0.75rem;
-      text-align: center;
-    }
-
-    .mockup-stat-label { font-size: 0.68rem; color: #94A3B8; text-transform: uppercase; font-weight: 700; }
-    .mockup-stat-val { font-size: 1.3rem; font-weight: 800; font-family: var(--font-mono); margin-top: 0.2rem; }
-
-    .mockup-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-    }
-
-    .mockup-table th { padding: 0.5rem; border-bottom: 1px solid #334155; color: #94A3B8; text-align: left; background: transparent; }
-    .mockup-table td { padding: 0.6rem 0.5rem; border-bottom: 1px solid #1E293B; }
-
-    .run-strip { display: flex; gap: 3px; align-items: center; }
-    .run-dot { width: 6px; height: 14px; border-radius: 2px; }
-    .dot-pass { background: #10B981; }
-    .dot-fail { background: #EF4444; }
-
-    /* ── Prompt Accordion Item ──────────────────────────────────────── */
     .prompt-box {
-      border: 1px solid var(--border);
-      border-radius: 0.65rem;
-      margin-bottom: 1rem;
-      overflow: hidden;
-      background: #FFFFFF;
+      border: 1px solid var(--border); border-radius: 0.65rem;
+      margin-bottom: 0.75rem; overflow: hidden; background: #FFFFFF;
     }
-
     .prompt-header {
-      background: #F8FAFC;
-      padding: 0.85rem 1.25rem;
-      font-weight: 700;
-      font-size: 0.92rem;
-      color: #1E293B;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: background 0.2s ease;
+      background: #F8FAFC; padding: 0.85rem 1.25rem; font-weight: 700;
+      font-size: 0.88rem; color: #1E293B; cursor: pointer; display: flex;
+      justify-content: space-between; align-items: center; transition: background 0.2s ease;
       border-bottom: 1px solid transparent;
     }
-
-    .prompt-header:hover {
-      background: var(--primary-light);
-      color: var(--primary);
-    }
-
+    .prompt-header:hover { background: var(--primary-light); color: var(--primary); }
     .prompt-box.open .prompt-header {
-      border-bottom-color: var(--border);
-      background: var(--primary-light);
-      color: var(--primary);
+      border-bottom-color: var(--border); background: var(--primary-light); color: var(--primary);
     }
+    .prompt-body { padding: 1.25rem; display: none; font-size: 0.9rem; background: #FFFFFF; }
+    .prompt-box.open .prompt-body { display: block; }
 
-    .prompt-body {
-      padding: 1.25rem;
-      display: none;
-      font-size: 0.9rem;
-      background: #FFFFFF;
+    .timeline-item {
+      border-left: 3px solid var(--primary); padding-left: 1.25rem;
+      margin-bottom: 1.5rem; position: relative;
     }
-
-    .prompt-box.open .prompt-body {
-      display: block;
+    .timeline-item::before {
+      content: ''; position: absolute; left: -7px; top: 0;
+      width: 11px; height: 11px; border-radius: 50%; background: var(--primary);
     }
+    .timeline-date { font-size: 0.78rem; font-weight: 700; color: var(--primary); text-transform: uppercase; }
+    .timeline-title { font-size: 1.05rem; font-weight: 700; color: #0F172A; margin: 0.2rem 0 0.4rem 0; }
 
-    /* ── Footer ─────────────────────────────────────────────────────── */
     footer {
-      margin-top: 4rem;
-      padding-top: 2rem;
-      border-top: 1px solid var(--border);
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      text-align: center;
+      margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border);
+      color: var(--text-muted); font-size: 0.85rem; text-align: center;
     }
 
     @media (max-width: 900px) {
       .sidebar { display: none; }
       .content-wrapper { margin-left: 0; padding: 1.5rem; }
-      .mockup-stats-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
 <body>
 
-  <!-- ── Left Sidebar Navigation ──────────────────────────────────────── -->
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-brand">
-        🧪 FlakyTest KT
-      </div>
-      <div class="sidebar-subtitle">Engineering Knowledge Transfer</div>
+      <div class="sidebar-brand">🧪 FlakyTest Master KT</div>
+      <div class="sidebar-subtitle">Complete Architecture & History</div>
       <div class="sidebar-search">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
-        <input type="text" id="sidebar-filter" placeholder="Search sections & prompts..." onkeyup="filterSidebar(this.value)">
+        <input type="text" id="sidebar-filter" placeholder="Filter sections & prompts..." onkeyup="filterSidebar(this.value)">
       </div>
     </div>
 
     <nav class="sidebar-nav" id="sidebar-menu">
-      <div class="nav-group-title">System Architecture</div>
-      <a href="#overview" class="nav-item active">📋 1. Project Overview</a>
-      <a href="#architecture-diagram" class="nav-item">🏗️ 2. System Architecture</a>
-      <a href="#decision-tree" class="nav-item">🌳 3. Decision Tree & Logic</a>
-      <a href="#algorithm" class="nav-item">📊 4. Scoring & Variance</a>
+      <div class="nav-group-title">1. Architecture & Core</div>
+      <a href="#overview" class="nav-item active">📋 Executive Summary</a>
+      <a href="#architecture-diagram" class="nav-item">🏗️ System Architecture</a>
+      <a href="#decision-tree" class="nav-item">🌳 Classification Tree</a>
+      <a href="#scoring-math" class="nav-item">📊 Scoring & Variance Math</a>
 
-      <div class="nav-group-title">CI/CD & Ingestion</div>
-      <a href="#ingestion-lifecycle" class="nav-item">🔄 5. Ingestion Lifecycle</a>
-      <a href="#workflows-hub" class="nav-item">⚙️ 6. CI/CD Workflows Hub</a>
-      <a href="#fast-demo" class="nav-item">⚡ 7. Fast Demo Playbook</a>
+      <div class="nav-group-title">2. Complete Embedded Docs</div>
+      <a href="#full-readme" class="nav-item">📄 README.md (Full)</a>
+      <a href="#full-deployment" class="nav-item">☁️ DEPLOYMENT.md (Full)</a>
+      <a href="#ci-workflows" class="nav-item">⚙️ CI/CD Workflows Hub</a>
 
-      <div class="nav-group-title">UI & AI Diagnostics</div>
-      <a href="#ai-engine" class="nav-item">🤖 8. AI Root-Cause Engine</a>
-      <a href="#ui-architecture" class="nav-item">🎨 9. UI & Slide-Over Drawer</a>
-      <a href="#deployment" class="nav-item">☁️ 10. Render & Keep-Awake</a>
+      <div class="nav-group-title">3. Timeline & Discussions</div>
+      <a href="#evolution-timeline" class="nav-item">⏳ Evolution Timeline</a>
+      <a href="#troubleshooting-log" class="nav-item">🛠️ QA & Bug Log</a>
 
-      <div class="nav-group-title">Historical Evolution</div>
-      <a href="#prompt-history" class="nav-item">📜 11. Prompts Archive (1–68)</a>
-      <a href="#troubleshooting" class="nav-item">🛠️ 12. QA & Troubleshooting</a>
+      <div class="nav-group-title">4. Prompts Archive</div>
+      <a href="#prompts-archive" class="nav-item">📜 Prompts Archive (1–85)</a>
     </nav>
   </aside>
 
-  <!-- ── Main Content Body ────────────────────────────────────────────── -->
   <main class="content-wrapper">
 
-    <!-- Hero Header -->
     <header class="hero-header">
-      <div class="hero-badge">Comprehensive Visual KT Guide • AI_PROJECTS_2026</div>
-      <h1 class="hero-title">Flaky Test Detector Platform</h1>
+      <div class="hero-badge">Comprehensive Engineering Master Document</div>
+      <h1 class="hero-title">Flaky Test Detector — Master KT & Evolution Log</h1>
       <p class="hero-description">
-        Complete end-to-end technical documentation with high-definition architecture flowcharts, CI/CD pipeline diagrams, mathematical classification models, and the complete development archive.
+        The definitive technical source of truth for the Flaky Test Detector platform. Contains complete markdown document embeds, end-to-end SVG architecture diagrams, multi-framework CI workflows, and the unabridged prompt history from inception to demo-readiness.
       </p>
       <div class="hero-meta">
         <div class="hero-meta-item"><strong>Author:</strong> QA Automation & AI Agentic Team</div>
-        <div class="hero-meta-item"><strong>Tech Stack:</strong> FastAPI • SQLite (Disk) • Qdrant • Groq Llama 3.1 • Playwright</div>
+        <div class="hero-meta-item"><strong>Backend:</strong> FastAPI • SQLite (Persistent Disk) • Qdrant • Groq Llama 3.1</div>
         <div class="hero-meta-item"><strong>Live URL:</strong> <a href="https://flaky-test-detector-kbpc.onrender.com" target="_blank" style="color:var(--primary);text-decoration:none;font-weight:600;">flaky-test-detector-kbpc.onrender.com</a></div>
-        <div class="hero-meta-item"><strong>Revision:</strong> September 2026</div>
       </div>
     </header>
 
     <!-- SECTION 1: OVERVIEW -->
     <section id="overview" class="section-block">
-      <h2 class="section-title">📋 1. Project Overview & Business Value</h2>
-      <p class="section-subtitle">Why the Flaky Test Detector was built and the core problems it solves.</p>
-
+      <h2 class="section-title">📋 1. Executive Summary & Business Value</h2>
+      <p class="section-subtitle">Core problem statement, ROI, and technical differentiation.</p>
       <p>
-        In modern CI/CD pipelines, <strong>flaky tests</strong> (tests that intermittently pass and fail on identical source code) are the #1 contributor to developer frustration, false alarms, and bloated release cycles. Traditional test reporters treat test failures as binary, forcing QA teams to manually re-run entire suites or guess whether a failure represents a genuine regression or a transient timing glitch.
+        In modern continuous integration pipelines, <strong>flaky tests</strong> (tests that intermittently pass and fail on identical source code) generate noise, delay releases, and erode developer trust in automated test suites.
       </p>
-
       <div class="cards-grid">
         <div class="feature-card">
           <div class="feature-card-icon">⚡</div>
           <div class="feature-card-title">Transition-Based Scoring</div>
-          <div class="feature-card-text">Quantifies flakiness strictly based on status flips (Pass ↔ Fail) across sequential historical executions rather than raw pass rates.</div>
+          <div class="feature-card-text">Strictly quantifies flakiness based on status changes (Pass ↔ Fail) across historical runs rather than raw failure counts.</div>
         </div>
         <div class="feature-card">
           <div class="feature-card-icon">🧠</div>
-          <div class="feature-card-title">Vector Semantic Search</div>
-          <div class="feature-card-text">Indexes error messages and stack traces into Qdrant to find recurring cluster patterns across disparate test files and execution shards.</div>
+          <div class="feature-card-title">Vector Failure Clustering</div>
+          <div class="feature-card-text">Indexes error messages into Qdrant to group identical failure signatures across different test files and shards.</div>
         </div>
         <div class="feature-card">
           <div class="feature-card-icon">🎯</div>
           <div class="feature-card-title">Actionable AI Fixes</div>
-          <div class="feature-card-text">Uses Groq Llama 3.1 8B to generate pinpointed code-level remediation syntax (Playwright locators, explicit waits, session fixes) rather than generic advice.</div>
+          <div class="feature-card-text">Delivers syntax-level code fixes for Playwright, Selenium, and Tosca powered by Groq Llama 3.1 8B.</div>
         </div>
       </div>
     </section>
 
-    <!-- SECTION 2: ARCHITECTURE DIAGRAM (SVG) -->
+    <!-- SECTION 2: SYSTEM ARCHITECTURE DIAGRAM -->
     <section id="architecture-diagram" class="section-block">
-      <h2 class="section-title">🏗️ 2. System Architecture Diagram</h2>
-      <p class="section-subtitle">Visual data flow from CI test runners across dual-storage backends to client dashboard.</p>
-
+      <h2 class="section-title">🏗️ 2. End-to-End System Architecture</h2>
+      <p class="section-subtitle">Visual architecture connecting CI runners, dual-storage, LLM inference, and client UI.</p>
       <div class="diagram-container">
-        <div class="diagram-title"><span>📐</span> End-to-End System Architecture & Data Pipeline</div>
-        <svg class="flow-svg" viewBox="0 0 920 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Background Gradients -->
+        <div class="diagram-title"><span>📐</span> High-Definition Architectural Topology</div>
+        <svg class="flow-svg" viewBox="0 0 920 380" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="blueGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#EFF6FF"/>
-              <stop offset="100%" stop-color="#DBEAFE"/>
-            </linearGradient>
-            <linearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#FFFFFF"/>
-              <stop offset="100%" stop-color="#F8FAFC"/>
-            </linearGradient>
-            <linearGradient id="primaryGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#2563EB"/>
-              <stop offset="100%" stop-color="#1D4ED8"/>
-            </linearGradient>
-            <linearGradient id="purpleGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#FAF5FF"/>
-              <stop offset="100%" stop-color="#F3E8FF"/>
-            </linearGradient>
+            <linearGradient id="blueGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#EFF6FF"/><stop offset="100%" stop-color="#DBEAFE"/></linearGradient>
+            <linearGradient id="primaryGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563EB"/><stop offset="100%" stop-color="#1D4ED8"/></linearGradient>
+            <linearGradient id="purpleGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FAF5FF"/><stop offset="100%" stop-color="#F3E8FF"/></linearGradient>
           </defs>
 
-          <!-- Layer 1: CI Runners -->
-          <rect x="20" y="30" width="220" height="340" rx="12" fill="url(#blueGrad)" stroke="#BFDBFE" stroke-width="2"/>
-          <text x="130" y="60" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="14" fill="#1E40AF">CI / CD TEST RUNNERS</text>
+          <!-- CI Runners Box -->
+          <rect x="20" y="30" width="220" height="320" rx="10" fill="url(#blueGrad)" stroke="#BFDBFE" stroke-width="2"/>
+          <text x="130" y="60" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="13" fill="#1E40AF">CI / CD TEST RUNNERS</text>
           
-          <rect x="40" y="85" width="180" height="55" rx="8" fill="#FFFFFF" stroke="#93C5FD"/>
-          <text x="130" y="110" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="12" fill="#1E293B">Playwright Test Runner</text>
-          <text x="130" y="127" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748B">JUnit XML Reporter</text>
+          <rect x="40" y="80" width="180" height="50" rx="6" fill="#FFFFFF" stroke="#93C5FD"/>
+          <text x="130" y="105" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#1E293B">Playwright Test Runner</text>
+          <text x="130" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748B">--reporter=junit</text>
 
-          <rect x="40" y="155" width="180" height="55" rx="8" fill="#FFFFFF" stroke="#93C5FD"/>
-          <text x="130" y="180" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="12" fill="#1E293B">Selenium (Pytest / JUnit)</text>
-          <text x="130" y="197" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748B">--junitxml=results.xml</text>
+          <rect x="40" y="145" width="180" height="50" rx="6" fill="#FFFFFF" stroke="#93C5FD"/>
+          <text x="130" y="170" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#1E293B">Selenium (Pytest / JUnit)</text>
+          <text x="130" y="185" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748B">pytest --junitxml</text>
 
-          <rect x="40" y="225" width="180" height="55" rx="8" fill="#FFFFFF" stroke="#93C5FD"/>
-          <text x="130" y="250" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="12" fill="#1E293B">Tricentis Tosca</text>
-          <text x="130" y="267" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748B">Execution Server API</text>
+          <rect x="40" y="210" width="180" height="50" rx="6" fill="#FFFFFF" stroke="#93C5FD"/>
+          <text x="130" y="235" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#1E293B">Tricentis Tosca</text>
+          <text x="130" y="250" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748B">Server Execution API</text>
 
-          <rect x="40" y="295" width="180" height="55" rx="8" fill="#FFFFFF" stroke="#93C5FD"/>
-          <text x="130" y="320" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="12" fill="#1E293B">Advance Framework</text>
-          <text x="130" y="337" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748B">Katalon Sharded Tests</text>
+          <rect x="40" y="275" width="180" height="50" rx="6" fill="#FFFFFF" stroke="#93C5FD"/>
+          <text x="130" y="300" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#1E293B">Advance Framework</text>
+          <text x="130" y="315" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748B">Katalon Sharded Tests</text>
 
-          <!-- Connector 1 -->
-          <path d="M 240 200 L 300 200" stroke="#3B82F6" stroke-width="3" stroke-dasharray="4 4"/>
-          <polygon points="305,200 295,195 295,205" fill="#3B82F6"/>
-          <text x="272" y="190" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#2563EB" font-weight="700">POST XML</text>
+          <!-- Arrow 1 -->
+          <path d="M 240 190 L 300 190" stroke="#3B82F6" stroke-width="3" stroke-dasharray="4 4"/>
+          <polygon points="305,190 295,185 295,195" fill="#3B82F6"/>
 
-          <!-- Layer 2: FastAPI Backend -->
-          <rect x="310" y="30" width="260" height="340" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
-          <rect x="310" y="30" width="260" height="40" rx="12" fill="url(#primaryGrad)"/>
-          <text x="440" y="55" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="13" fill="#FFFFFF">FASTAPI BACKEND SERVICE</text>
+          <!-- Backend Box -->
+          <rect x="310" y="30" width="270" height="320" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+          <rect x="310" y="30" width="270" height="36" rx="10" fill="url(#primaryGrad)"/>
+          <text x="445" y="54" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="12" fill="#FFFFFF">FASTAPI BACKEND SERVICE</text>
 
-          <rect x="330" y="85" width="220" height="60" rx="8" fill="#F8FAFC" stroke="#E2E8F0"/>
-          <text x="440" y="110" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="12" fill="#0F172A">Ingestion & Tag Stripper</text>
-          <text x="440" y="128" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#059669">clean_test_name() regex</text>
+          <rect x="330" y="80" width="230" height="52" rx="6" fill="#F8FAFC" stroke="#E2E8F0"/>
+          <text x="445" y="102" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#0F172A">Tag Cleaner & Ingestion</text>
+          <text x="445" y="118" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#059669">clean_test_name() regex</text>
 
-          <rect x="330" y="155" width="220" height="60" rx="8" fill="#F8FAFC" stroke="#E2E8F0"/>
-          <text x="440" y="180" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="12" fill="#0F172A">Flakiness Scorer & Variance</text>
-          <text x="440" y="198" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#2563EB">Transition flip-rate logic</text>
+          <rect x="330" y="145" width="230" height="52" rx="6" fill="#F8FAFC" stroke="#E2E8F0"/>
+          <text x="445" y="167" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#0F172A">Flakiness Scorer & Variance</text>
+          <text x="445" y="183" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#2563EB">Transition flip-rate logic</text>
 
-          <rect x="330" y="225" width="220" height="60" rx="8" fill="#F8FAFC" stroke="#E2E8F0"/>
-          <text x="440" y="250" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="12" fill="#0F172A">Heuristic Categorizer</text>
-          <text x="440" y="268" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#D97706">Timing • Network • Overlay</text>
+          <rect x="330" y="210" width="230" height="52" rx="6" fill="#F8FAFC" stroke="#E2E8F0"/>
+          <text x="445" y="232" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#0F172A">Heuristic Categorizer</text>
+          <text x="445" y="248" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#D97706">Timing • Network • Overlay</text>
 
-          <rect x="330" y="295" width="220" height="60" rx="8" fill="#F8FAFC" stroke="#E2E8F0"/>
-          <text x="440" y="320" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="12" fill="#0F172A">Render 24/7 Keep-Awake</text>
-          <text x="440" y="338" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7C3AED">GET /health (10m cron)</text>
+          <rect x="330" y="275" width="230" height="52" rx="6" fill="#F8FAFC" stroke="#E2E8F0"/>
+          <text x="445" y="297" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#0F172A">Render 24/7 Keep-Awake</text>
+          <text x="445" y="313" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#7C3AED">GET /health (10m cron)</text>
 
-          <!-- Connector 2 (To DBs) -->
-          <path d="M 570 120 L 640 100" stroke="#059669" stroke-width="2"/>
-          <polygon points="645,98 635,95 638,105" fill="#059669"/>
+          <!-- DB Connections -->
+          <path d="M 580 110 L 640 90" stroke="#059669" stroke-width="2"/>
+          <polygon points="645,88 636,85 638,95" fill="#059669"/>
+          <path d="M 580 200 L 640 210" stroke="#7C3AED" stroke-width="2"/>
+          <polygon points="645,212 636,206 636,216" fill="#7C3AED"/>
 
-          <path d="M 570 200 L 640 220" stroke="#7C3AED" stroke-width="2"/>
-          <polygon points="645,222 638,215 635,225" fill="#7C3AED"/>
+          <!-- Right Side: DB & AI -->
+          <rect x="650" y="40" width="240" height="95" rx="8" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="2"/>
+          <text x="770" y="65" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="12" fill="#065F46">SQLite Database (/data)</text>
+          <text x="770" y="85" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="10" fill="#047857">Table: test_runs</text>
+          <text x="770" y="103" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#059669">Persistent Disk Mount</text>
 
-          <!-- Layer 3: Persistence & AI -->
-          <rect x="650" y="50" width="240" height="110" rx="10" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="2"/>
-          <text x="770" y="80" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="13" fill="#065F46">SQLite Database (/data)</text>
-          <text x="770" y="102" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="11" fill="#047857">Table: test_runs</text>
-          <text x="770" y="122" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#065F46">Persistent Volume Mount</text>
-          <text x="770" y="140" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#059669">One-time .seeded protection</text>
+          <rect x="650" y="150" width="240" height="95" rx="8" fill="url(#purpleGrad)" stroke="#D8B4FE" stroke-width="2"/>
+          <text x="770" y="175" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="12" fill="#6B21A8">Qdrant Vector Index</text>
+          <text x="770" y="195" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="10" fill="#7E22CE">Collection: test_failures</text>
+          <text x="770" y="213" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6B21A8">Top-5 Similarity Match</text>
 
-          <rect x="650" y="180" width="240" height="100" rx="10" fill="url(#purpleGrad)" stroke="#D8B4FE" stroke-width="2"/>
-          <text x="770" y="210" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="13" fill="#6B21A8">Qdrant Vector DB</text>
-          <text x="770" y="232" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="11" fill="#7E22CE">Collection: test_failures</text>
-          <text x="770" y="252" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6B21A8">Cosine Similarity Clusters</text>
-
-          <rect x="650" y="300" width="240" height="85" rx="10" fill="#FFFBEB" stroke="#FDE68A" stroke-width="2"/>
-          <text x="770" y="325" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="13" fill="#92400E">Groq Cloud AI Engine</text>
-          <text x="770" y="347" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#B45309">llama-3.1-8b-instant</text>
-          <text x="770" y="367" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="10" fill="#92400E">Tool-tailored code fix output</text>
+          <rect x="650" y="260" width="240" height="90" rx="8" fill="#FFFBEB" stroke="#FDE68A" stroke-width="2"/>
+          <text x="770" y="285" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="12" fill="#92400E">Groq Cloud AI Engine</text>
+          <text x="770" y="305" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#B45309">llama-3.1-8b-instant</text>
+          <text x="770" y="323" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="9" fill="#92400E">Tool-tailored code remediation</text>
         </svg>
       </div>
     </section>
 
-    <!-- SECTION 3: DECISION TREE DIAGRAM (SVG) -->
+    <!-- SECTION 3: CLASSIFICATION DECISION TREE -->
     <section id="decision-tree" class="section-block">
       <h2 class="section-title">🌳 3. Flakiness Classification Decision Tree</h2>
-      <p class="section-subtitle">How raw test run history is classified into deterministic verdicts and root causes.</p>
-
+      <p class="section-subtitle">Visual state machine for assigning verdicts, colors, and root causes.</p>
       <div class="diagram-container">
-        <div class="diagram-title"><span>🔄</span> State Transition & Step Variance Decision Tree</div>
-        <svg class="flow-svg" viewBox="0 0 900 360" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Start Node -->
-          <rect x="20" y="140" width="140" height="50" rx="25" fill="#2563EB"/>
-          <text x="90" y="170" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="12" fill="#FFFFFF">Test Run Ingested</text>
+        <div class="diagram-title"><span>🔄</span> Decision Tree & Step Variance Evaluation</div>
+        <svg class="flow-svg" viewBox="0 0 900 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="120" width="130" height="50" rx="25" fill="#2563EB"/>
+          <text x="85" y="150" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="11" fill="#FFFFFF">Test Run Log</text>
 
-          <path d="M 160 165 L 210 165" stroke="#64748B" stroke-width="2"/>
-          <polygon points="215,165 207,160 207,170" fill="#64748B"/>
+          <path d="M 150 145 L 200 145" stroke="#64748B" stroke-width="2"/>
+          <polygon points="205,145 197,140 197,150" fill="#64748B"/>
 
-          <!-- Decision Node 1: Fail Count -->
-          <polygon points="280,120 350,165 280,210 210,165" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2"/>
-          <text x="280" y="162" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="10" fill="#1E40AF">Failures</text>
-          <text x="280" y="176" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="10" fill="#1E40AF">Recorded?</text>
+          <polygon points="270,105 340,145 270,185 200,145" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2"/>
+          <text x="270" y="142" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="10" fill="#1E40AF">Failures</text>
+          <text x="270" y="155" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="10" fill="#1E40AF">Found?</text>
 
-          <!-- Branch 1: No Failures (Green) -->
-          <path d="M 280 120 L 280 60 L 390 60" stroke="#10B981" stroke-width="2"/>
-          <polygon points="395,60 387,55 387,65" fill="#10B981"/>
-          <text x="310" y="50" font-family="JetBrains Mono" font-weight="700" font-size="10" fill="#059669">NO (0 Fails)</text>
+          <path d="M 270 105 L 270 50 L 390 50" stroke="#10B981" stroke-width="2"/>
+          <polygon points="395,50 387,45 387,55" fill="#10B981"/>
+          <text x="300" y="42" font-family="JetBrains Mono" font-weight="700" font-size="9" fill="#059669">NO (0 Fails)</text>
 
-          <rect x="400" y="35" width="200" height="50" rx="8" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="2"/>
-          <text x="500" y="58" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="12" fill="#065F46">HEALTHY / STABLE</text>
-          <text x="500" y="74" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#047857">Badge: Green (0.0% Score)</text>
+          <rect x="400" y="25" width="220" height="50" rx="8" fill="#ECFDF5" stroke="#A7F3D0" stroke-width="2"/>
+          <text x="510" y="48" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="12" fill="#065F46">HEALTHY / STABLE</text>
+          <text x="510" y="64" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#047857">Badge: Green (0.0% Score)</text>
 
-          <!-- Branch 2: Has Failures -->
-          <path d="M 350 165 L 420 165" stroke="#64748B" stroke-width="2"/>
-          <polygon points="425,165 417,160 417,170" fill="#64748B"/>
-          <text x="380" y="155" font-family="JetBrains Mono" font-weight="700" font-size="10" fill="#64748B">YES</text>
+          <path d="M 340 145 L 410 145" stroke="#64748B" stroke-width="2"/>
+          <polygon points="415,145 407,140 407,150" fill="#64748B"/>
+          <text x="375" y="138" font-family="JetBrains Mono" font-weight="700" font-size="9" fill="#64748B">YES</text>
 
-          <!-- Decision Node 2: Any Passes? -->
-          <polygon points="490,120 560,165 490,210 420,165" fill="#FFFBEB" stroke="#F59E0B" stroke-width="2"/>
-          <text x="490" y="162" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="10" fill="#92400E">Any Passes</text>
-          <text x="490" y="176" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="10" fill="#92400E">Recorded?</text>
+          <polygon points="480,105 550,145 480,185 410,145" fill="#FFFBEB" stroke="#F59E0B" stroke-width="2"/>
+          <text x="480" y="142" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="10" fill="#92400E">Any Passes</text>
+          <text x="480" y="155" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="10" fill="#92400E">in History?</text>
 
-          <!-- Branch 2A: Never Passed (Real Bug) -->
-          <path d="M 490 210 L 490 290 L 590 290" stroke="#EF4444" stroke-width="2"/>
-          <polygon points="595,290 587,285 587,295" fill="#EF4444"/>
-          <text x="520" y="280" font-family="JetBrains Mono" font-weight="700" font-size="10" fill="#DC2626">NO (100% Fail)</text>
+          <path d="M 480 185 L 480 260 L 590 260" stroke="#EF4444" stroke-width="2"/>
+          <polygon points="595,260 587,255 587,265" fill="#EF4444"/>
+          <text x="515" y="250" font-family="JetBrains Mono" font-weight="700" font-size="9" fill="#DC2626">NO (100% Fail)</text>
 
-          <rect x="600" y="265" width="270" height="60" rx="8" fill="#FEF2F2" stroke="#FECACA" stroke-width="2"/>
-          <text x="735" y="288" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="12" fill="#991B1B">LIKELY REAL BUG (REGRESSION)</text>
-          <text x="735" y="306" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#B91C1C">Badge: Red • Consistent Failure</text>
-          <text x="735" y="318" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="9" fill="#7F1D1D">Cause: Broken assertion, offline service</text>
+          <rect x="600" y="235" width="280" height="55" rx="8" fill="#FEF2F2" stroke="#FECACA" stroke-width="2"/>
+          <text x="740" y="258" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="12" fill="#991B1B">LIKELY REAL BUG (REGRESSION)</text>
+          <text x="740" y="274" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#B91C1C">Badge: Red • Consistent Failure</text>
 
-          <!-- Branch 2B: Mixed History (Flaky) -->
-          <path d="M 560 165 L 630 165" stroke="#F59E0B" stroke-width="2"/>
-          <polygon points="635,165 627,160 627,170" fill="#F59E0B"/>
-          <text x="590" y="155" font-family="JetBrains Mono" font-weight="700" font-size="10" fill="#D97706">YES (Mixed)</text>
+          <path d="M 550 145 L 620 145" stroke="#F59E0B" stroke-width="2"/>
+          <polygon points="625,145 617,140 617,150" fill="#F59E0B"/>
+          <text x="580" y="138" font-family="JetBrains Mono" font-weight="700" font-size="9" fill="#D97706">YES (Mixed)</text>
 
-          <!-- Decision Node 3: Step Variance -->
-          <rect x="640" y="130" width="240" height="70" rx="8" fill="#FFFBEB" stroke="#FDE68A" stroke-width="2"/>
-          <text x="760" y="153" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="12" fill="#92400E">LIKELY FLAKY TEST</text>
-          <text x="760" y="170" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#B45309">Badge: Amber • Transition Score</text>
-          <text x="760" y="188" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="9" fill="#92400E">Evaluates Step Variance & Groq LLM Fix</text>
+          <rect x="630" y="115" width="250" height="60" rx="8" fill="#FFFBEB" stroke="#FDE68A" stroke-width="2"/>
+          <text x="755" y="138" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="12" fill="#92400E">LIKELY FLAKY TEST</text>
+          <text x="755" y="155" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#B45309">Badge: Amber • Transition Score</text>
         </svg>
       </div>
     </section>
 
-    <!-- SECTION 4: SCORING & VARIANCE -->
-    <section id="algorithm" class="section-block">
+    <!-- SECTION 4: SCORING & VARIANCE MATH -->
+    <section id="scoring-math" class="section-block">
       <h2 class="section-title">📊 4. Flakiness Scoring & Step Variance Math</h2>
-      <p class="section-subtitle">Detailed mathematical formulas powering the transition score and failure concentration metric.</p>
+      <p class="section-subtitle">Mathematical formulation of transition flip-rates and failure concentration.</p>
+      
+      <h3>Transition Flip Formula</h3>
+      <pre><code>def flakinessScore(runs):
+    if len(runs) < 3:
+        return 0.0
+    transitions = 0
+    for i in range(1, len(runs)):
+        if runs[i].status != runs[i - 1].status:
+            transitions += 1
+    return transitions / (len(runs) - 1)</code></pre>
 
-      <h3>1. Mathematical Transition Score</h3>
+      <h3>Step Failure Variance Concentration</h3>
       <p>
-        The flakiness score $S$ for a test with $N$ chronological executions is calculated as:
+        Evaluates step-level clustering: Concentration = (Failures at Top Step) / (Total Failures).
+        If &ge; 75%, failures are concentrated (localized brittle selector). If &lt; 75%, failures are scattered (environment latency / network jitter).
       </p>
-      <div style="background:#F1F5F9;padding:1rem;border-radius:0.5rem;font-family:var(--font-mono);font-size:0.95rem;text-align:center;margin:1rem 0;">
-        $$ S = \frac{1}{N - 1} \sum_{i=2}^{N} \mathbf{1}_{[\text{status}_i \neq \text{status}_{i-1}]} \quad (\text{for } N \ge 3) $$
-      </div>
-
-      <h3>2. Step Variance Metric</h3>
-      <p>
-        Variance analysis inspects the failure distribution across individual test steps $s \in S$:
-      </p>
-      <ul>
-        <li><strong>Concentrated Failure ($\max(Count(s)) / \text{Total Failures} \ge 0.75$):</strong> Indicates a specific brittle element locator or target button.</li>
-        <li><strong>Scattered Failure ($\max(Count(s)) / \text{Total Failures} &lt; 0.75$):</strong> Indicates systemic worker instability, CPU throttling, or network jitter.</li>
-      </ul>
     </section>
 
-    <!-- SECTION 5: INGESTION LIFECYCLE DIAGRAM (SVG) -->
-    <section id="ingestion-lifecycle" class="section-block">
-      <h2 class="section-title">🔄 5. Multi-Framework Ingestion Lifecycle</h2>
-      <p class="section-subtitle">How reports are transformed from raw CI runner XML into stored test records.</p>
+    <!-- SECTION 5: FULL README.MD EMBEDDED -->
+    <section id="full-readme" class="section-block">
+      <h2 class="section-title">📄 5. Complete README.md Document</h2>
+      <p class="section-subtitle">Full contents of Flaky Test Detector_README.md embedded verbatim.</p>
+      <div class="code-header">Flaky Test Detector_README.md</div>
+      <pre><code># 🧪 Flaky Test Detector
 
-      <div class="diagram-container">
-        <div class="diagram-title"><span>📥</span> Automated JUnit XML Extraction & Tag Sanitization</div>
-        <svg class="flow-svg" viewBox="0 0 900 240" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Step 1 -->
-          <rect x="20" y="40" width="180" height="150" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/>
-          <rect x="20" y="40" width="180" height="30" rx="8" fill="#3B82F6"/>
-          <text x="110" y="60" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#FFFFFF">1. JUnit XML Input</text>
-          <text x="110" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#0F172A">&lt;testcase name="..."&gt;</text>
-          <text x="110" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#DC2626">"checkout @demo"</text>
-          <text x="110" y="140" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748B">time="1.42"</text>
-          <text x="110" y="160" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748B">timestamp="UTC"</text>
+&gt; An AI-powered test reliability platform that ingests test execution reports, detects flaky tests using transition-based scoring, performs vector similarity search across failure signatures, and delivers actionable, code-level root-cause analysis.
 
-          <path d="M 200 115 L 240 115" stroke="#3B82F6" stroke-width="2"/>
-          <polygon points="245,115 237,110 237,120" fill="#3B82F6"/>
+---
 
-          <!-- Step 2 -->
-          <rect x="250" y="40" width="180" height="150" rx="8" fill="#EFF6FF" stroke="#BFDBFE"/>
-          <rect x="250" y="40" width="180" height="30" rx="8" fill="#2563EB"/>
-          <text x="340" y="60" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#FFFFFF">2. Tag Sanitizer</text>
-          <text x="340" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#1E40AF">clean_test_name()</text>
-          <text x="340" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#2563EB">r'(?:\s+@[\w-]+)+$'</text>
-          <text x="340" y="145" text-anchor="middle" font-family="JetBrains Mono" font-weight="700" font-size="10" fill="#059669">"checkout"</text>
-          <text x="340" y="165" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="9" fill="#475569">Tags cleanly removed</text>
+## 🌟 Key Features
 
-          <path d="M 430 115 L 470 115" stroke="#3B82F6" stroke-width="2"/>
-          <polygon points="475,115 467,110 467,120" fill="#3B82F6"/>
+- **📊 Flakiness Detection &amp; Scoring**: Transition-based scoring algorithm calculating flakiness scores based on status changes (`pass` ↔ `fail`) across test runs.
+- **🔍 Step Failure Breakdown &amp; Variance Analysis**:
+  - Displays frequency breakdown per step (e.g. `Failed in 3 of 4 runs`).
+  - Evaluates step variance score: **&quot;Failures are concentrated at one step&quot;** vs **&quot;Failures occur at different steps each time&quot;**.
+- **🤖 Actionable, Code-Level AI Suggestions**:
+  - Powered by LLM (Groq `llama-3.1-8b-instant`).
+  - Tailored to specific test automation frameworks (Playwright, Selenium, Tosca).
+  - Provides concrete syntax fixes (e.g., `await page.locator(&#x27;#submit&#x27;).click({ timeout: 10000 })` or `WebDriverWait(driver, 10).until(...)`).
+  - Recommends diagnostic artifacts (trace viewer, DOM snapshots, HAR logs) when signal is insufficient.
+- **⚡ Lightweight &amp; Persistent**:
+  - Memory-optimized Docker container (&lt;50MB RAM usage) compatible with 512MB free tier deployments.
+  - Persistent SQLite and Qdrant storage with one-time seed protection.
+- **🎨 Modern Dark Theme Dashboard**: Real-time interactive UI with keyboard navigation, column sorting, run history strips, and 24-hour timestamp formatting (`07 Aug 08:38`).
 
-          <!-- Step 3 -->
-          <rect x="480" y="40" width="180" height="150" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/>
-          <rect x="480" y="40" width="180" height="30" rx="8" fill="#059669"/>
-          <text x="570" y="60" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#FFFFFF">3. Schema Validation</text>
-          <text x="570" y="95" text-anchor="middle" font-family="Plus Jakarta Sans" font-size="10" fill="#0F172A">Pydantic TestRun</text>
-          <text x="570" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#059669">duration_ms = 1420</text>
-          <text x="570" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#059669">status = 'pass'/'fail'</text>
-          <text x="570" y="155" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#059669">error_message normalized</text>
+---
 
-          <path d="M 660 115 L 700 115" stroke="#059669" stroke-width="2"/>
-          <polygon points="705,115 697,110 697,120" fill="#059669"/>
+## 🏗️ Architecture &amp; Technology Stack
 
-          <!-- Step 4 -->
-          <rect x="710" y="40" width="170" height="150" rx="8" fill="#ECFDF5" stroke="#A7F3D0"/>
-          <rect x="710" y="40" width="170" height="30" rx="8" fill="#047857"/>
-          <text x="795" y="60" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="700" font-size="11" fill="#FFFFFF">4. Atomic Ingest</text>
-          <text x="795" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#065F46">INSERT SQLite DB</text>
-          <text x="795" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7C3AED">UPSERT Qdrant Vector</text>
-          <text x="795" y="145" text-anchor="middle" font-family="JetBrains Mono" font-weight="700" font-size="10" fill="#047857">HTTP 200 OK</text>
-        </svg>
-      </div>
+```
++-------------------------------------------------------------------+
+|                        GitHub Actions CI/CD                       |
+|   Playwright / JUnit XML Reports -&gt; Ingestion Endpoints            |
++---------------------------------+---------------------------------+
+                                  |
+                                  v
++---------------------------------+---------------------------------+
+|                       FastAPI Backend                             |
+|  - Ingestion: /api/v1/test-runs/ingest &amp; /ingest-junit            |
+|  - Scoring:   /api/v1/flaky-tests/                                |
+|  - Analysis:  /api/v1/flaky-tests/{test_name}/analysis           |
++-----------------+---------------------------------+---------------+
+                  |                                 |
+                  v                                 v
++-----------------+---------------+  +--------------+---------------+
+|     SQLite (SQLAlchemy)         |  |   Qdrant (Vector Database)    |
+|   Persistent Test Run Records   |  |   Failure Vector Embeddings   |
++---------------------------------+  +------------------------------+
+```
+
+- **Backend**: Python 3.11, FastAPI, SQLAlchemy, SQLite, Qdrant Client, Groq LLM API.
+- **Frontend**: Single-file modern vanilla HTML/CSS/JS dashboard (`dashboard.html`).
+- **DevOps**: Docker, Render Web Services, GitHub Actions.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Local Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/JNamu12/Flaky-Test-Detector.git
+cd &quot;Project_14_Flaky Test Detector&quot;
+
+# Install backend dependencies
+cd backend
+pip install -r requirements.txt
+
+# Start the FastAPI backend server
+uvicorn src.main:app --reload --port 8000
+```
+
+Open your browser at `http://localhost:8000/` to view the live dashboard.
+
+---
+
+### 2. Running Playwright Demo Pipeline
+
+```bash
+# Install node dependencies
+npm install
+
+# Run demo Playwright tests
+npx playwright test
+
+# Ingest test results into the detector
+python tools/junit_xml_to_ingest.py results/junit.xml --url http://localhost:8000/api/v1/test-runs/ingest
+```
+
+---
+
+## 📡 API Reference
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/` | `GET` | Serves the interactive `dashboard.html` interface |
+| `/api/v1/test-runs/` | `GET` | Returns all raw test execution records |
+| `/api/v1/test-runs/ingest` | `POST` | Ingests a JSON batch of test execution runs |
+| `/api/v1/test-runs/ingest-junit` | `POST` | Ingests a JUnit XML report file via multipart upload |
+| `/api/v1/flaky-tests/` | `GET` | Returns ranked flaky test summaries and scores |
+| `/api/v1/flaky-tests/{test_name}/analysis` | `GET` | Returns vector similarity matches and LLM root-cause analysis |
+| `/health` | `GET` | Returns system health and Qdrant connection status |
+| `/api/v1/version` | `GET` | Returns running application version |
+
+---
+
+## ☁️ Deployment (Render Free Tier)
+
+1. Connect your repository to **Render**.
+2. Set Environment Variables in Render:
+   - `GROQ_API_KEY`: *(Optional)* Your Groq API key for LLM analysis.
+   - `DATA_DIR`: `/var/data` (Path for persistent disk volume).
+3. Mount a Persistent Disk at `/var/data` (Size: 1 GB).
+4. Render Docker settings:
+   - **Docker Command**: `exec uvicorn src.main:app --host 0.0.0.0 --port ${PORT:-8000}`
+   - Memory footprint: **~35 MB RAM**.
+
+---
+
+## 📜 License
+
+MIT License. Designed for high-reliability test automation and CI/CD quality engineering.
+</code></pre>
     </section>
 
-    <!-- SECTION 6: CI/CD WORKFLOWS HUB (INTERACTIVE TABS) -->
-    <section id="workflows-hub" class="section-block">
-      <h2 class="section-title">⚙️ 6. CI/CD Workflows Hub</h2>
-      <p class="section-subtitle">Copy-paste ready GitHub Actions workflow templates supporting all pipelines.</p>
+    <!-- SECTION 6: FULL DEPLOYMENT.MD EMBEDDED -->
+    <section id="full-deployment" class="section-block">
+      <h2 class="section-title">☁️ 6. Complete DEPLOYMENT.md Document</h2>
+      <p class="section-subtitle">Full contents of DEPLOYMENT.md embedded verbatim.</p>
+      <div class="code-header">DEPLOYMENT.md</div>
+      <pre><code># Flaky Test Detector — Deployment Guide
 
-      <!-- Tabs Navigation -->
+## Prerequisites
+
+- Docker Engine 24+ and Docker Compose v2
+- A machine with at least 1 GB RAM (the embedding model uses ~200 MB)
+- (Optional) A Groq API key for LLM-powered root-cause analysis
+
+---
+
+## Quick Start (single host with Docker Compose)
+
+```bash
+# 1. Clone / copy the project
+git clone https://github.com/JNamu12/AI_PROJECTS_2026.git
+cd &quot;AI_PROJECTS_2026/Project_14_Flaky Test Detector&quot;
+
+# 2. Create your .env from the template
+cp backend/.env.example backend/.env
+# Edit backend/.env and fill in real values (see below)
+
+# 3. Build and launch
+docker compose up -d --build
+
+# 4. Verify it&#x27;s healthy
+curl http://localhost:8000/health
+# → {&quot;status&quot;:&quot;ok&quot;,&quot;qdrant&quot;:&quot;connected&quot;}
+```
+
+The API will be available at **http://localhost:8000**.  
+The interactive docs are at **http://localhost:8000/docs**.
+
+---
+
+## Environment Variables
+
+Copy `backend/.env.example` to `backend/.env` and configure each variable:
+
+| Variable | Required | Description |
+|---|---|---|
+| `GROQ_API_KEY` | Optional | Groq key for LLM analysis. Leave blank for heuristic mode. |
+| `QDRANT_URL` | Optional | Remote Qdrant URL. Leave blank for local file storage. |
+| `QDRANT_API_KEY` | Optional | Only needed when `QDRANT_URL` points to a secured Qdrant Cloud instance. |
+| `DB_PATH` | Optional | Absolute path for the SQLite DB. Defaults to the Docker volume at `/data/flaky_test_detector.db`. |
+| `API_KEY` | **Recommended** | Secret key for the `/ingest` endpoint. Generate with `openssl rand -hex 32`. |
+| `ALLOWED_ORIGINS` | Optional | Comma-separated list of frontend origins allowed by CORS. |
+
+---
+
+## Data Persistence
+
+Two Docker named volumes are created automatically:
+
+| Volume | Contents |
+|---|---|
+| `backend_data` | SQLite database (`flaky_test_detector.db`) |
+| `qdrant_local` | Local Qdrant vector store (when `QDRANT_URL` is unset) |
+
+Both survive `docker compose down`. To wipe all data:
+
+```bash
+docker compose down -v   # -v removes named volumes
+```
+
+---
+
+## Securing the Ingestion Endpoint
+
+When `API_KEY` is set in `.env`, every `POST /api/v1/test-runs/ingest` call must include:
+
+```
+X-API-Key: &lt;your_key&gt;
+```
+
+**curl example:**
+```bash
+curl -X POST https://your-host:8000/api/v1/test-runs/ingest \
+  -H &quot;Content-Type: application/json&quot; \
+  -H &quot;X-API-Key: $API_KEY&quot; \
+  -d @payload.json
+```
+
+**Python converter tool:**
+```bash
+python tools/junit_xml_to_ingest.py report.xml \
+  --url https://your-host:8000/api/v1/test-runs/ingest \
+  --api-key &quot;$API_KEY&quot;
+# or set the API_KEY env var and omit --api-key
+```
+
+Read-only endpoints (`GET /api/v1/flaky-tests/`) are **not** protected.
+
+---
+
+## Deploying to a VM / VPS
+
+```bash
+# Install Docker on Ubuntu 22.04
+curl -fsSL https://get.docker.com | sh
+
+# Copy project files to the server (or clone from GitHub)
+scp -r . user@your-server:/opt/flaky-detector
+
+# SSH in and start
+ssh user@your-server
+cd /opt/flaky-detector
+cp backend/.env.example backend/.env
+nano backend/.env    # fill in real values
+
+docker compose up -d --build
+```
+
+To expose the backend over HTTPS, put **nginx** or **Caddy** in front:
+
+```nginx
+# /etc/nginx/sites-available/flaky-detector
+server {
+    listen 443 ssl;
+    server_name api.your-domain.com;
+
+    ssl_certificate     /etc/letsencrypt/live/api.your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.your-domain.com/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+---
+
+## Useful Commands
+
+```bash
+# View live logs
+docker compose logs -f backend
+
+# Restart after a code change
+docker compose up -d --build backend
+
+# Run the health check manually
+docker compose exec backend curl -s http://localhost:8000/health
+
+# Open a Python shell inside the container
+docker compose exec backend python
+```
+</code></pre>
+    </section>
+
+    <!-- SECTION 7: CI/CD WORKFLOWS HUB -->
+    <section id="ci-workflows" class="section-block">
+      <h2 class="section-title">⚙️ 7. CI/CD Workflows Hub (All Pipelines)</h2>
+      <p class="section-subtitle">Tabbed repository workflows for fast demo, full test execution, and keep-awake.</p>
+
       <div class="tabs-nav">
-        <button class="tab-btn active" onclick="switchTab(event, 'tab-fast-demo')">⚡ LIVE DEMO Workflow</button>
-        <button class="tab-btn" onclick="switchTab(event, 'tab-full-demo')">🧪 Full Demo Pipeline</button>
+        <button class="tab-btn active" onclick="switchTab(event, 'tab-fast-demo')">⚡ LIVE DEMO (15s)</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-full-demo')">🧪 Full Pipeline</button>
         <button class="tab-btn" onclick="switchTab(event, 'tab-keep-awake')">⏰ Keep-Awake Cron</button>
-        <button class="tab-btn" onclick="switchTab(event, 'tab-playwright-hook')">🎭 Framework Ingestion Hook</button>
+        <button class="tab-btn" onclick="switchTab(event, 'tab-playwright-hook')">🎭 Advance Framework Hook</button>
       </div>
 
-      <!-- Tab 1: Fast Demo -->
       <div id="tab-fast-demo" class="tab-pane active">
-        <div class="code-header">.github/workflows/live-demo-fast.yml (Fast 15-Second Subset)</div>
+        <div class="code-header">.github/workflows/live-demo-fast.yml</div>
         <pre><code>name: LIVE DEMO — fast subset
-
 on:
   workflow_dispatch:
     inputs:
@@ -986,27 +834,18 @@ on:
         description: 'Demo run description'
         required: false
         default: 'Live presentation demo'
-
 jobs:
   fast-demo-run:
     name: Run Fast Demo Tests (@demo)
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js 20 & Python 3.11
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with: { node-version: '20' }
-
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
-
-      - name: Install dependencies
-        run: |
-          npm ci
-          npx playwright install chromium --with-deps
-
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
       - name: Run Fast Demo Tests (@demo)
         run: |
           mkdir -p results
@@ -1014,7 +853,6 @@ jobs:
         continue-on-error: true
         env:
           PLAYWRIGHT_JUNIT_OUTPUT_NAME: results/junit.xml
-
       - name: Send results to Flaky Test Detector
         if: always()
         env:
@@ -1022,23 +860,17 @@ jobs:
         run: |
           DETECTOR_URL="https://flaky-test-detector-kbpc.onrender.com"
           if [ -f results/junit.xml ]; then
-            python tools/junit_xml_to_ingest.py results/junit.xml \
-              --url "${DETECTOR_URL}/api/v1/test-runs/ingest" \
-              --commit-sha "${{ github.sha }}" \
-              --api-key "${API_KEY}"
+            python tools/junit_xml_to_ingest.py results/junit.xml               --url "${DETECTOR_URL}/api/v1/test-runs/ingest"               --commit-sha "${{ github.sha }}"               --api-key "${API_KEY}"
           fi</code></pre>
       </div>
 
-      <!-- Tab 2: Full Demo -->
       <div id="tab-full-demo" class="tab-pane">
-        <div class="code-header">.github/workflows/flaky-detector-demo.yml (Full Pipeline)</div>
+        <div class="code-header">.github/workflows/flaky-detector-demo.yml</div>
         <pre><code>name: Flaky Detector Demo Pipeline
-
 on:
   push:
     branches: [main]
   workflow_dispatch: {}
-
 jobs:
   build-test-report:
     runs-on: ubuntu-latest
@@ -1050,34 +882,31 @@ jobs:
         with: { python-version: '3.11' }
       - run: npm ci
       - run: npx playwright install --with-deps
-      - name: Run All Tests
+      - name: Run Playwright tests
         run: |
           mkdir -p results
           npx playwright test --reporter=junit
         continue-on-error: true
         env:
           PLAYWRIGHT_JUNIT_OUTPUT_NAME: results/junit.xml
-      - name: Ingest to Detector
+      - name: Send results to Flaky Test Detector
         if: always()
         env:
           API_KEY: ${{ secrets.DETECTOR_API_KEY }}
         run: |
-          python tools/junit_xml_to_ingest.py results/junit.xml \
-            --url "https://flaky-test-detector-kbpc.onrender.com/api/v1/test-runs/ingest" \
-            --commit-sha "${{ github.sha }}" \
-            --api-key "${API_KEY}"</code></pre>
+          DETECTOR_URL="https://flaky-test-detector-kbpc.onrender.com"
+          if [ -f results/junit.xml ]; then
+            python tools/junit_xml_to_ingest.py results/junit.xml               --url "${DETECTOR_URL}/api/v1/test-runs/ingest"               --commit-sha "${{ github.sha }}"               --api-key "${API_KEY}"
+          fi</code></pre>
       </div>
 
-      <!-- Tab 3: Keep-Awake Cron -->
       <div id="tab-keep-awake" class="tab-pane">
-        <div class="code-header">.github/workflows/keep-awake.yml (24/7 Render Keep-Awake)</div>
+        <div class="code-header">.github/workflows/keep-awake.yml</div>
         <pre><code>name: Keep Render Backend Awake
-
 on:
   schedule:
-    - cron: '*/10 * * * *' # Executes every 10 minutes
+    - cron: '*/10 * * * *'
   workflow_dispatch: {}
-
 jobs:
   ping-health:
     runs-on: ubuntu-latest
@@ -1086,14 +915,12 @@ jobs:
         run: |
           URL="https://flaky-test-detector-kbpc.onrender.com/health"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "${URL}" || echo "FAILED")
-          echo "Render Health Status: ${STATUS}"</code></pre>
+          echo "Render Status: ${STATUS}"</code></pre>
       </div>
 
-      <!-- Tab 4: Framework Ingestion Hook -->
       <div id="tab-playwright-hook" class="tab-pane">
-        <div class="code-header">playwright.yml Ingestion Snippet (For Advance-Playwright-Framework)</div>
-        <pre><code>      # Ingest step to paste at bottom of your test job
-      - name: 🚀 Send results to Flaky Test Detector
+        <div class="code-header">Advance-Playwright-Framework Ingestion Hook (playwright.yml)</div>
+        <pre><code>      - name: 🚀 Send results to Flaky Test Detector
         if: always()
         env:
           API_KEY: ${{ secrets.DETECTOR_API_KEY }}
@@ -1101,299 +928,1527 @@ jobs:
           DETECTOR_URL="https://flaky-test-detector-kbpc.onrender.com"
           curl -s -o junit_ingest.py https://raw.githubusercontent.com/JNamu12/Flaky-Test-Detector/main/tools/junit_xml_to_ingest.py
           if [ -f results/junit.xml ]; then
-            python junit_ingest.py results/junit.xml \
-              --url "${DETECTOR_URL}/api/v1/test-runs/ingest" \
-              --commit-sha "${{ github.sha }}" \
-              --api-key "${API_KEY}"
+            python junit_ingest.py results/junit.xml               --url "${DETECTOR_URL}/api/v1/test-runs/ingest"               --commit-sha "${{ github.sha }}"               --api-key "${API_KEY}"
           fi</code></pre>
       </div>
     </section>
 
-    <!-- SECTION 7: FAST DEMO PLAYBOOK -->
-    <section id="fast-demo" class="section-block">
-      <h2 class="section-title">⚡ 7. Fast Demo Playbook (Under 15 Seconds)</h2>
-      <p class="section-subtitle">How to run a high-impact presentation demo without waiting 25 minutes.</p>
+    <!-- SECTION 8: EVOLUTION TIMELINE -->
+    <section id="evolution-timeline" class="section-block">
+      <h2 class="section-title">⏳ 8. Complete Project Evolution Timeline</h2>
+      <p class="section-subtitle">Chronological record of key architectural milestones and decisions.</p>
 
-      <div class="callout callout-success">
-        <span class="callout-icon">🎯</span>
-        <div>
-          <strong>Live Presentation Ready:</strong> The <code>LIVE DEMO — fast subset</code> workflow runs a representative 5-test mix (Timing, Network 503, Session Expiry, Real Bug, Baseline) in <strong>12 seconds</strong>!
-        </div>
+      <div class="timeline-item">
+        <div class="timeline-date">Phase 1: Project Scaffolding</div>
+        <div class="timeline-title">FastAPI Backend, SQLAlchemy Models & Groq Llama 3.1 Setup</div>
+        <p>Created Pydantic schemas (<code>TestRun</code>, <code>TestRunBatch</code>, <code>FlakyTestSummary</code>), SQLite database layer, and initial Groq LLM root-cause analyzer.</p>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-date">Phase 2: UI Dashboard & Heuristic Categorizer</div>
+        <div class="timeline-title">Single-File Dashboard with Dark/Light Theme & History Strips</div>
+        <p>Created zero-dependency <code>dashboard.html</code> with 14-run history rectangles, transition-based score badges, and pure JS error normalization.</p>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-date">Phase 3: Render Free Tier Optimization</div>
+        <div class="timeline-title">Memory Footprint Reduction (~35MB RAM) & Persistent Disk Mount</div>
+        <p>Eliminated 502 Bad Gateway OOM errors by replacing local PyTorch with Groq Cloud API, mounting persistent storage at <code>/data</code>, and adding <code>.seeded</code> guard.</p>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-date">Phase 4: Slide-Over Drawer & UX Polish</div>
+        <div class="timeline-title">720px Slide-Over Drawer, Timezone Engine & Tag Stripping</div>
+        <p>Replaced bottom detail panel with a modern slide-over drawer, added <code>parseUTCDate()</code> for local IST timezone rendering, and created <code>clean_test_name()</code> to strip <code>@demo</code> tags from XML.</p>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-date">Phase 5: Live Demo & Reliability</div>
+        <div class="timeline-title">15-Second Fast Live Demo Workflow & 24/7 Keep-Awake Cron</div>
+        <p>Created dedicated <code>LIVE DEMO — fast subset</code> GitHub Actions workflow and automated 10-minute <code>keep-awake.yml</code> cron to prevent Render sleep.</p>
       </div>
     </section>
 
-    <!-- SECTION 8: AI ROOT CAUSE ENGINE -->
-    <section id="ai-engine" class="section-block">
-      <h2 class="section-title">🤖 8. AI Root-Cause Engine & Prompt Heuristics</h2>
-      <p class="section-subtitle">How Groq Llama 3.1 8B produces grounded, tool-specific code fixes.</p>
+    <!-- SECTION 9: QA & TROUBLESHOOTING LOG -->
+    <section id="troubleshooting-log" class="section-block">
+      <h2 class="section-title">🛠️ 9. QA & Troubleshooting Log</h2>
+      <p class="section-subtitle">Resolution of edge cases, bug reports, and optimizations encountered.</p>
 
       <div class="table-container">
         <table>
           <thead>
-            <tr><th>Error Signature</th><th>Category</th><th>Tailored Actionable Fix Example</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>net::ERR_CONNECTION_REFUSED at http://localhost:3000</code></td>
-              <td>Server Connection Offline</td>
-              <td><em>"Target server at http://localhost:3000 was unreachable. Ensure dev server is started via <code>npm run dev</code> or configure <code>webServer</code> in playwright.config.ts."</em></td>
-            </tr>
-            <tr>
-              <td><code>ElementClickInterceptedException: overlay receiving click</code></td>
-              <td>UI Overlay Intercepted</td>
-              <td><em>"In step 'ClickSubmit', wait for overlay to detach: <code>await page.locator('.overlay').waitFor({ state: 'detached' })</code> and scroll into view."</em></td>
-            </tr>
-            <tr>
-              <td><code>TimeoutError: page.waitForSelector timeout 5000ms exceeded</code></td>
-              <td>Timing / Hydration</td>
-              <td><em>"Replace fixed sleep with explicit locator wait: <code>await page.locator('#target').waitFor({ state: 'visible', timeout: 15000 })</code>."</em></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- SECTION 9: UI ARCHITECTURE & WIREFRAME MOCKUP -->
-    <section id="ui-architecture" class="section-block">
-      <h2 class="section-title">🎨 9. UI Architecture & Interactive Mockups</h2>
-      <p class="section-subtitle">Visual wireframes and architecture of the Slide-Over Drawer and real-time dashboard.</p>
-
-      <div class="mockup-window">
-        <div class="mockup-header">
-          <div class="mockup-dot dot-red"></div>
-          <div class="mockup-dot dot-yellow"></div>
-          <div class="mockup-dot dot-green"></div>
-          <div class="mockup-title">Flaky Test Detector — Live Dashboard UI Simulation</div>
-        </div>
-        <div class="mockup-body">
-          <!-- Summary Stat Cards -->
-          <div class="mockup-stats-grid">
-            <div class="mockup-stat-card">
-              <div class="mockup-stat-label">Tests Monitored</div>
-              <div class="mockup-stat-val" style="color:#F8FAFC;">91</div>
-            </div>
-            <div class="mockup-stat-card">
-              <div class="mockup-stat-label">Flaky</div>
-              <div class="mockup-stat-val" style="color:#F59E0B;">6</div>
-            </div>
-            <div class="mockup-stat-card">
-              <div class="mockup-stat-label">Stable</div>
-              <div class="mockup-stat-val" style="color:#10B981;">81</div>
-            </div>
-            <div class="mockup-stat-card">
-              <div class="mockup-stat-label">Real Bugs</div>
-              <div class="mockup-stat-val" style="color:#EF4444;">4</div>
-            </div>
-          </div>
-
-          <!-- Table Simulation -->
-          <table class="mockup-table">
-            <thead>
-              <tr>
-                <th>TEST NAME</th>
-                <th>RUN HISTORY</th>
-                <th>SCORE</th>
-                <th>PASS / FAIL</th>
-                <th>LAST RUN</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style="color:#93C5FD;">checkout_submit_button_race_condition</td>
-                <td>
-                  <div class="run-strip">
-                    <span class="run-dot dot-pass"></span><span class="run-dot dot-fail"></span>
-                    <span class="run-dot dot-pass"></span><span class="run-dot dot-pass"></span>
-                    <span class="run-dot dot-fail"></span><span class="run-dot dot-pass"></span>
-                    <span class="run-dot dot-pass"></span>
-                  </div>
-                </td>
-                <td><span class="badge badge-flaky">66.7%</span></td>
-                <td><span style="color:#10B981;">5</span> / <span style="color:#EF4444;">2</span></td>
-                <td>02 Sep 07:44</td>
-              </tr>
-              <tr>
-                <td style="color:#93C5FD;">payment_gateway_always_timeout_bug</td>
-                <td>
-                  <div class="run-strip">
-                    <span class="run-dot dot-fail"></span><span class="run-dot dot-fail"></span>
-                    <span class="run-dot dot-fail"></span><span class="run-dot dot-fail"></span>
-                  </div>
-                </td>
-                <td><span class="badge badge-fail">0.0%</span></td>
-                <td><span style="color:#10B981;">0</span> / <span style="color:#EF4444;">4</span></td>
-                <td>02 Sep 07:44</td>
-              </tr>
-              <tr>
-                <td style="color:#93C5FD;">homepage_loads_correctly</td>
-                <td>
-                  <div class="run-strip">
-                    <span class="run-dot dot-pass"></span><span class="run-dot dot-pass"></span>
-                    <span class="run-dot dot-pass"></span><span class="run-dot dot-pass"></span>
-                    <span class="run-dot dot-pass"></span><span class="run-dot dot-pass"></span>
-                    <span class="run-dot dot-pass"></span>
-                  </div>
-                </td>
-                <td><span class="badge badge-pass">0.0%</span></td>
-                <td><span style="color:#10B981;">7</span> / <span style="color:#EF4444;">0</span></td>
-                <td>02 Sep 07:44</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 10: DEPLOYMENT & DEVOPS -->
-    <section id="deployment" class="section-block">
-      <h2 class="section-title">☁️ 10. Render Deployment & 24/7 Keep-Awake</h2>
-      <p class="section-subtitle">How the backend is configured on Render Free Tier with zero cold-starts.</p>
-
-      <ul>
-        <li><strong>Memory Footprint:</strong> Reduced from ~1.2GB down to <strong>~35MB RAM</strong> by utilizing Groq Cloud API.</li>
-        <li><strong>Persistent Disk:</strong> Mounted at <code>/data</code> with environment variable <code>DB_PATH=/data/flaky_test_detector.db</code>.</li>
-        <li><strong>Keep-Awake Cron:</strong> Automatic GitHub Actions ping to <code>/health</code> every 10 minutes keeps instance warm 24/7.</li>
-      </ul>
-    </section>
-
-    <!-- SECTION 11: PROMPTS ARCHIVE -->
-    <section id="prompt-history" class="section-block">
-      <h2 class="section-title">📜 11. Comprehensive Prompts & Development Archive</h2>
-      <p class="section-subtitle">Chronological record of all project prompts, engineering requests, and delivered solutions.</p>
-
-      <div id="prompts-list">
-        
-        <div class="prompt-box open">
-          <div class="prompt-header" onclick="togglePrompt(this)">
-            <span>Phase 1: Project Foundation & Core Services (Prompts 1 – 16)</span>
-            <span>▼</span>
-          </div>
-          <div class="prompt-body">
-            <ul>
-              <li><strong>Prompt 1-4:</strong> Initialize project repo, FastAPI app with CORS, requirements.txt, and environment templates.</li>
-              <li><strong>Prompt 6:</strong> Create <code>TestRun</code>, <code>TestRunBatch</code>, and <code>FlakyTestSummary</code> Pydantic models and SQLAlchemy schema.</li>
-              <li><strong>Prompt 7:</strong> Implement <code>generate_sample_data.py</code> creating 120 synthetic test runs across 18 tests.</li>
-              <li><strong>Prompt 8-10:</strong> Build ingestion endpoint <code>POST /api/v1/test-runs/ingest</code> and <code>calculate_flakiness_score()</code> transition formula.</li>
-              <li><strong>Prompt 11-13:</strong> Configure Groq Llama 3.1 8B root-cause analyzer and test analysis route <code>/api/v1/flaky-tests/{test_name}/analysis</code>.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="prompt-box">
-          <div class="prompt-header" onclick="togglePrompt(this)">
-            <span>Phase 2: Data Synthesis & Vanilla JS Dashboard (Prompts 17 – 36)</span>
-            <span>▼</span>
-          </div>
-          <div class="prompt-body">
-            <ul>
-              <li><strong>Prompt 17-20:</strong> Enhanced data generator with realistic timing exceptions, stale element references, and business regression assertions.</li>
-              <li><strong>Prompt 21-27:</strong> Built self-contained <code>dashboard.html</code> with dark theme CSS custom variables and developer monospace font stack.</li>
-              <li><strong>Prompt 28-31:</strong> Implemented run history rectangle strips (last 14 runs), score badges, and pass/fail summary columns.</li>
-              <li><strong>Prompt 32-36:</strong> Created pure JS <code>normalizeError()</code> and <code>categorize()</code> keyword classifier with responsive mobile breakpoints.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="prompt-box">
-          <div class="prompt-header" onclick="togglePrompt(this)">
-            <span>Phase 3: Multi-Tool JUnit Ingestion & Documentation (Prompts 37 – 50)</span>
-            <span>▼</span>
-          </div>
-          <div class="prompt-body">
-            <ul>
-              <li><strong>Prompt 42:</strong> Authored Tosca Server Execution API integration guide and curl forwarding script.</li>
-              <li><strong>Prompt 43-44:</strong> Authored Playwright JUnit reporter guide and Selenium pytest / Maven / RobotFramework adapters.</li>
-              <li><strong>Prompt 45-46:</strong> Created automated GitHub Actions ingestion workflows and test fixtures.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="prompt-box">
-          <div class="prompt-header" onclick="togglePrompt(this)">
-            <span>Phase 4: Optimization, Persistent Storage & Production Render Setup (Prompts 51 – 68)</span>
-            <span>▼</span>
-          </div>
-          <div class="prompt-body">
-            <ul>
-              <li><strong>Memory Optimization:</strong> Removed heavy PyTorch/SentenceTransformers packages; dropped RAM usage from >1GB to 35MB.</li>
-              <li><strong>Persistence:</strong> Added <code>/data/.seeded</code> marker to prevent sample seed data from overwriting real CI runs on container restart.</li>
-              <li><strong>Step Failure Variance:</strong> Extended analysis panel to show frequency breakdown per step and variance concentration summary.</li>
-              <li><strong>Actionable AI Suggestions:</strong> Updated root-cause analyzer prompt to output concrete code fixes for Playwright, Selenium, and Tosca.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="prompt-box">
-          <div class="prompt-header" onclick="togglePrompt(this)">
-            <span>Phase 5: UI Polish, Slide-Over Drawer, Timezone & Demo Workflow (Latest Requests)</span>
-            <span>▼</span>
-          </div>
-          <div class="prompt-body">
-            <ul>
-              <li><strong>Sidebar & Layout:</strong> Wrapped page in <code>.layout</code> with left navigation sidebar and dark/light theme switcher with localStorage persistence.</li>
-              <li><strong>Slide-Over Drawer:</strong> Converted bottom detail view into a fixed 720px right-side drawer with backdrop blur to eliminate scrolling.</li>
-              <li><strong>Local Timezone Parser:</strong> Added <code>parseUTCDate()</code> to convert server UTC timestamps to user's exact local browser time (e.g. <code>07:44 IST</code>).</li>
-              <li><strong>Verdict Badge Colors:</strong> Configured score badge color to reflect actual verdict (Green = Always passing, Amber = Flaky, Red = Real bug) rather than 0% flip score.</li>
-              <li><strong>Tag Cleaner:</strong> Added <code>clean_test_name()</code> to strip <code>@demo</code>, <code>@smoke</code> tag annotations during XML parsing.</li>
-              <li><strong>Fast Live Demo Workflow:</strong> Created <code>LIVE DEMO — fast subset</code> workflow running <code>npx playwright test --grep @demo</code> in 15 seconds.</li>
-              <li><strong>Keep-Awake Cron:</strong> Added scheduled GitHub Actions cron to ping <code>/health</code> every 10 minutes to eliminate Render cold-starts.</li>
-            </ul>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- SECTION 12: TROUBLESHOOTING & QA LOG -->
-    <section id="troubleshooting" class="section-block">
-      <h2 class="section-title">🛠️ 12. QA & Troubleshooting Log</h2>
-      <p class="section-subtitle">Common questions, edge cases, and architectural fixes resolved during development.</p>
-
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr><th>Issue Observed</th><th>Root Cause</th><th>Resolution Applied</th></tr>
+            <tr><th>Issue / Bug Encountered</th><th>Root Cause</th><th>Engineering Fix Applied</th></tr>
           </thead>
           <tbody>
             <tr>
               <td><strong>Render 502 Bad Gateway / OOM</strong></td>
-              <td>SentenceTransformers loaded PyTorch models exceeding 512MB RAM free limit.</td>
-              <td>Removed local PyTorch; switched to Groq Cloud API and optimized Docker container to ~35MB RAM.</td>
+              <td>SentenceTransformers PyTorch package exceeded 512MB RAM free limit.</td>
+              <td>Switched to Groq Cloud API and reduced Docker RAM footprint to ~35MB.</td>
             </tr>
             <tr>
               <td><strong>Real Data Lost on Restart</strong></td>
-              <td>Default SQLite path was in container ephemeral storage and seed script ran on every boot.</td>
-              <td>Mounted persistent volume at <code>/data</code> and added one-time <code>.seeded</code> guard file.</td>
+              <td>SQLite DB path was in ephemeral storage and seed script ran on boot.</td>
+              <td>Mounted persistent volume at <code>/data</code> with <code>.seeded</code> guard file.</td>
             </tr>
             <tr>
               <td><strong>Timestamp Showed 02:13 Instead of 07:44</strong></td>
-              <td>Browser parsed UTC string without explicit 'Z' as naive local time.</td>
-              <td>Implemented <code>parseUTCDate()</code> to enforce UTC parsing before converting to browser local time.</td>
+              <td>Browser parsed UTC string without 'Z' as naive local time.</td>
+              <td>Implemented <code>parseUTCDate()</code> to enforce UTC parsing before browser local conversion.</td>
             </tr>
             <tr>
-              <td><strong>Tag '@demo' Appeared in Test Names</strong></td>
+              <td><strong>Tag '@demo' in Test Names</strong></td>
               <td>Playwright tags in test title were ingested literally.</td>
               <td>Created regex cleaner <code>re.sub(r'(?:\s+@[\w-]+)+$', '', name)</code> in parser layer.</td>
             </tr>
             <tr>
-              <td><strong>User Had to Scroll Down to View Analysis</strong></td>
-              <td>Detail panel was placed at bottom of 100+ row table.</td>
-              <td>Transformed panel into modern right-side fixed slide-over drawer with backdrop blur.</td>
+              <td><strong>Scrolling Needed for Details</strong></td>
+              <td>Detail panel opened at bottom of 100+ row table.</td>
+              <td>Converted to 720px right-side slide-over drawer with backdrop blur.</td>
             </tr>
             <tr>
-              <td><strong>Render Slept During Presentations</strong></td>
-              <td>Render Free Tier spins down after 15 minutes of zero traffic.</td>
-              <td>Added <code>keep-awake.yml</code> GitHub Actions workflow to ping <code>/health</code> every 10 minutes.</td>
+              <td><strong>Render Sleeping During Demos</strong></td>
+              <td>Render Free Tier spins down after 15 minutes of inactivity.</td>
+              <td>Added <code>keep-awake.yml</code> cron pinging <code>/health</code> every 10 minutes.</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- Footer -->
+    <!-- SECTION 10: PROMPTS ARCHIVE (1-85) -->
+    <section id="prompts-archive" class="section-block">
+      <h2 class="section-title">📜 10. Comprehensive Prompts Archive (Prompts 1 – 85)</h2>
+      <p class="section-subtitle">Every prompt and engineering request recorded across all development sessions.</p>
+
+      <div id="prompts-list">
+        
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 1</span> @[c:\Users\namra\OneDrive\Documents\AI_PROJECTS_2026\Project_09_Advanc...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>@[c:\Users\namra\OneDrive\Documents\AI_PROJECTS_2026\Project_09_Advanced_RAG_Copilot] please open this UI application</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 2</span> Create a new full-stack project called &quot;flaky-test-detector&quot; with this...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Create a new full-stack project called &quot;flaky-test-detector&quot; with this structure:
+
+backend/ (FastAPI, Python) and frontend/ (React + Vite). 
+
+Set up backend/requirements.txt with: fastapi, uvicorn, pydantic, 
+
+qdrant-client, sentence-transformers, groq, python-dotenv, sqlalchemy. 
+
+Set up backend/src/main.py with a basic FastAPI app, CORS enabled for 
+
+localhost:5173, and a /health endpoint. Set up the frontend with Vite + 
+
+React + a basic App.jsx and package.json. Create backend/.env.example 
+
+with GROQ_API_KEY, QDRANT_URL, QDRANT_API_KEY placeholders.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 4</span> @[c:\Users\namra\OneDrive\Documents\AI_PROJECTS_2026\Project_14_Flaky ...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>@[c:\Users\namra\OneDrive\Documents\AI_PROJECTS_2026\Project_14_Flaky Test Detector] Create a new full-stack project called &quot;flaky-test-detector&quot; with this structure:
+
+backend/ (FastAPI, Python) and frontend/ (React + Vite). 
+
+Set up backend/requirements.txt with: fastapi, uvicorn, pydantic, 
+
+qdrant-client, sentence-transformers, groq, python-dotenv, sqlalchemy. 
+
+Set up backend/src/main.py with a basic FastAPI app, CORS enabled for 
+
+localhost:5173, and a /health endpoint. Set up the frontend with Vite + 
+
+React + a basic App.jsx and package.json. Create backend/.env.example 
+
+with GROQ_API_KEY, QDRANT_URL, QDRANT_API_KEY placeholders.
+
+```</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 6</span> ## Step 1 â€” Data Models
+
+
+
+```
+
+In backend/src/models.py, create Pyd...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>## Step 1 â€” Data Models
+
+
+
+```
+
+In backend/src/models.py, create Pydantic models:
+
+- TestRun: test_name (str), status (Literal[&quot;pass&quot;,&quot;fail&quot;]), 
+
+  timestamp (datetime), duration_ms (int), error_message (Optional[str]), 
+
+  stack_trace (Optional[str]), commit_sha (Optional[str])
+
+- TestRunBatch: runs (List[TestRun])
+
+- FlakyTestSummary: test_name (str), flakiness_score (float), 
+
+  total_runs (int), fail_count (int), last_status (str)
+
+Also set up a lightweight SQLite database using SQLAlchemy in 
+
+backend/src/database.py to persist ingested TestRun records, with a 
+
+simple table matching the TestRun model.
+
+```</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 7</span> Step 2 â€” Sample/Demo Data Generator
+
+
+
+```
+
+Create backend/scripts/g...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Step 2 â€” Sample/Demo Data Generator
+
+
+
+```
+
+Create backend/scripts/generate_sample_data.py that generates 120 
+
+synthetic TestRun records as JSON with a fixed random seed for reproducibility, 
+
+covering 18 distinct test names. Design it so:
+
+- 4 tests are clearly flaky: alternating pass/fail with recurring error 
+
+  patterns like &quot;TimeoutException: element not clickable&quot; or 
+
+  &quot;StaleElementReferenceException&quot;
+
+- 12 tests are stable passes
+
+- 2 tests are consistently failing (real bugs â€” same error every time, 
+
+  no flip-flopping)
+
+Save output to backend/data/sample_test_runs.json. Print a summary table 
+
+of test_name -&gt; pass/fail counts when the script runs.
+
+```</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 8</span> ## Step 3 â€” Ingestion &amp; Storage
+
+
+
+```
+
+Add POST /api/v1/test-runs/i...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>## Step 3 â€” Ingestion &amp; Storage
+
+
+
+```
+
+Add POST /api/v1/test-runs/ingest in backend/src/routes/test_runs.py that 
+
+accepts a TestRunBatch, saves each TestRun to the SQLite database via the 
+
+database.py session, and returns a count of records ingested. Wire this 
+
+router into main.py.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 9</span> ## Step 4 â€” Embedding + Vector Store Setup
+
+
+
+```
+
+Create backend/sr...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>## Step 4 â€” Embedding + Vector Store Setup
+
+
+
+```
+
+Create backend/src/services/embeddings.py using sentence-transformers 
+
+with the BAAI/bge-small-en-v1.5 model to embed text. Create 
+
+backend/src/services/vector_store.py that connects to Qdrant (local, 
+
+file-based path ./qdrant_data for dev), creates a collection called 
+
+&quot;test_failures&quot; if it doesn&#x27;t exist, and exposes functions 
+
+upsert_failure(test_name, error_message, stack_trace, timestamp) and 
+
+search_similar_failures(error_message, stack_trace, top_k=5). On each 
+
+successful ingest of a failed TestRun in Step 3&#x27;s endpoint, call 
+
+upsert_failure() automatically.
+
+```</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 10</span> ## Step 5 â€” Flakiness Scoring Logic
+
+
+
+```
+
+Create backend/src/servi...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>## Step 5 â€” Flakiness Scoring Logic
+
+
+
+```
+
+Create backend/src/services/flakiness_scorer.py with:
+
+1. calculate_flakiness_score(runs: List[TestRun]) -&gt; float â€” sorts runs 
+
+   by timestamp, counts status transitions (pass-&gt;fail or fail-&gt;pass) 
+
+   between consecutive runs, divides by (total_runs - 1). Return 0.0 if 
+
+   fewer than 3 runs.
+
+2. rank_flaky_tests() -&gt; List[FlakyTestSummary] â€” queries all TestRun 
+
+   records from the database, groups by test_name, scores each with 
+
+   calculate_flakiness_score, and returns them sorted descending by score.
+
+```</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 11</span> ## Step 6 â€” LLM Root Cause Analysis
+
+
+
+```
+
+Create backend/src/servi...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>## Step 6 â€” LLM Root Cause Analysis
+
+
+
+```
+
+Create backend/src/services/root_cause_analyzer.py with 
+
+generate_root_cause_explanation(test_name, current_error, current_stack_trace, 
+
+similar_failures) that calls the Groq API (llama-3.1-8b-instant or similar) 
+
+with a system prompt instructing the model to act as a senior QA engineer. 
+
+The prompt should include the current error, the current stack trace, and 
+
+the list of similar_failures (test_name + error + timestamp for each),</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 12</span> then ask the model to output JSON with fields: 
+
+verdict (&quot;likely_flak...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>then ask the model to output JSON with fields: 
+
+verdict (&quot;likely_flaky&quot; | &quot;likely_real_bug&quot;), 
+
+root_cause_category (&quot;timing/race_condition&quot; | &quot;environment&quot; | &quot;network&quot; | 
+
+&quot;test_data&quot; | &quot;genuine_regression&quot; | &quot;unknown&quot;), 
+
+explanation (string, under 100 words), 
+
+suggested_next_step (string, under 40 words). 
+
+Parse and validate the JSON response before returning it.
+
+```</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 13</span> ## Step 7 â€” API Endpoints
+
+
+
+```
+
+Add these routes to backend/src/ro...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>## Step 7 â€” API Endpoints
+
+
+
+```
+
+Add these routes to backend/src/routes/flaky_tests.py:
+
+1. GET /api/v1/flaky-tests â€” calls rank_flaky_tests(), returns the list.
+
+2. GET /api/v1/flaky-tests/{test_name}/analysis â€” fetches the most recent 
+
+   failed run for that test_name from the database, calls 
+
+   search_similar_failures() from vector_store.py, then calls 
+
+   generate_root_cause_explanation(), and returns both the similar 
+
+   failures list and the AI analysis as one JSON response.
+
+Wire this router into main.py. Add basic error handling for test names 
+
+with no failure history (return 404 with a clear message).</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 14</span> ## Step 8 â€” Frontend Dashboard
+
+
+
+```
+
+Build the React frontend with...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>## Step 8 â€” Frontend Dashboard
+
+
+
+```
+
+Build the React frontend with two views:
+
+1. FlakyTestsList.jsx â€” fetches GET /api/v1/flaky-tests on mount, renders 
+
+   a table with columns: Test Name, Flakiness Score (as a colored badge: 
+
+   red if &gt;0.5, yellow if 0.2-0.5, green if &lt;0.2), Total Runs, Fail Count. 
+
+   Sortable by clicking column headers. Each row is clickable.
+
+2. TestAnalysisPanel.jsx â€” opens when a row is clicked, calls GET 
+
+   /api/v1/flaky-tests/{test_name}/analysis, and displays: the verdict as 
+
+   a badge, root cause category, the AI explanation text, the suggested 
+
+   next step, and a list of similar past failures with timestamps and 
+
+   similarity scores.
+
+Use plain CSS or Tailwind (whichever is already set up), keep it clean 
+
+and readable â€” this will be shown live during a hackathon demo.
+
+```</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 15</span> ## Step 9 â€” Docker Compose for Easy Demo Setup
+
+
+
+```
+
+Create a dock...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>## Step 9 â€” Docker Compose for Easy Demo Setup
+
+
+
+```
+
+Create a docker-compose.yml at the project root with two services: 
+
+backend (build from ./backend, expose port 8000, env_file ./backend/.env, 
+
+volume for ./qdrant_data) and frontend (build from ./frontend, expose 
+
+port 5173 or serve via nginx on port 80). Create Dockerfiles for both 
+
+services if they don&#x27;t exist. Ensure the whole stack runs with a single 
+
+`docker-compose up --build`.
+
+```</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 16</span> ## Step 10 â€” End-to-End Test Run
+
+
+
+```
+
+Write backend/scripts/demo_...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>## Step 10 â€” End-to-End Test Run
+
+
+
+```
+
+Write backend/scripts/demo_seed.sh (or .py) that: 
+
+1. Starts by calling generate_sample_data.py, 
+
+2. POSTs the resulting JSON to /api/v1/test-runs/ingest, 
+
+3. GETs /api/v1/flaky-tests and prints the ranked results, 
+
+4. GETs the analysis for the top-ranked flaky test and pretty-prints the 
+
+   AI explanation. 
+
+Run this end-to-end and fix any errors until it completes cleanly.
+
+```</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 17</span> Write a Python script generate_data.py that creates synthetic CI test-...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Write a Python script generate_data.py that creates synthetic CI test-run 
+data. Use random.seed(42) for reproducibility.
+
+Define three groups of test names:
+1. flaky_tests — 4 tests, each paired with 1-2 realistic error message 
+   templates (e.g. &quot;TimeoutException: element not clickable at point 
+   (x, y)&quot;, &quot;StaleElementReferenceException: element is not attached to 
+   the page document&quot;, &quot;TimeoutError: waiting for selector \&quot;#id\&quot; 
+   failed: timeout 5000ms exceeded&quot;, &quot;ElementClickInterceptedException: 
+   element click intercepted by overlay&quot;).
+2. stable_pass_tests — 12 test names with no special error handling needed.
+3. real_bug_tests — 2 tests, each paired with exactly one fixed assertion 
+   error message that never changes.
+
+Write a rand_time(base, i) helper that returns an ISO timestamp offset by 
+roughly i*3 hours from a base datetime, with some random minute jitter.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 18</span> In generate_data.py, for each test in flaky_tests: generate 9-12 runs....</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>In generate_data.py, for each test in flaky_tests: generate 9-12 runs. 
+For each run, pick status randomly weighted ~55% pass / 45% fail. On 
+fail, pick one of that test&#x27;s error templates and build a fake stack 
+trace string referencing the test name and a random line number. Assign 
+each run a unique id, increasing timestamp, random duration_ms between 
+800-4200, and a random commit_sha (short hex string).</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 19</span> Extend generate_data.py: for each test in stable_pass_tests, generate ...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Extend generate_data.py: for each test in stable_pass_tests, generate 
+8-11 runs weighted ~95% pass / 5% fail (rare failures use a generic 
+&quot;unexpected value in one-off environment hiccup&quot; message, no shared 
+signature). For each test in real_bug_tests, generate 8-10 runs that are 
+ALL failures using that test&#x27;s single fixed error message every time — 
+no passes at all.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 20</span> Combine all generated runs into one list, sort by timestamp ascending,...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Combine all generated runs into one list, sort by timestamp ascending, 
+and write to sample_test_runs.json with indent=2. Then print a summary 
+table: test_name, pass count, fail count, for every test, so I can 
+verify the mix looks right (some clearly flaky, most stable, a couple 
+consistently broken) before moving to the UI.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 21</span> Create a single self-contained HTML file (no external dependencies, no...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Create a single self-contained HTML file (no external dependencies, no 
+build step) called dashboard.html. Set up:
+- A dark theme via CSS custom properties: --bg (deep charcoal-navy), 
+  --surface (slightly lighter card background), --border (hairline), 
+  --text-primary, --text-secondary, --text-muted, and three semantic 
+  colors: teal (healthy/pass), amber (flaky/warning), coral (fail/bug) — 
+  each with a base, a muted background variant, and a text variant for 
+  use on that background.
+- Two font stacks: a monospace stack for test names and data (this is a 
+  developer tool), and a system sans-serif stack for labels and prose.
+- A page header with a small eyebrow label, an h1 title &quot;Flaky test 
+  detector&quot;, and a one-line subtitle.
+- An empty div#stats and an empty table with thead columns: Test, Run 
+  history, Score, Pass / fail, Last run, and tbody#table-body.
+- An empty div#panel (hidden by default) below the table for the detail 
+  view, with a header row containing a title span and a close button.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 22</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 23</span> Populate the table by fetching data from the backend API (e.g., GET /a...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Populate the table by fetching data from the backend API (e.g., GET /api/v1/flaky-tests) and render rows with badges and click‑to‑open detail view?
+
+Implement the JavaScript logic for the panel (loading the analysis endpoint, displaying verdict, root‑cause, etc.)?
+
+Add any additional visual tweaks, animations, or responsive behavior?</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 24</span> ok...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>ok</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 25</span> yes...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>yes</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 26</span> Do you want to set the apiBase value in the dashboard (e.g., point it ...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Do you want to set the apiBase value in the dashboard (e.g., point it to http://localhost:8000 or another URL) so the page can actually talk to your backend?
+
+Or would you like me to add additional UI enhancements (animations, richer data visualizations, keyboard shortcuts, etc.)?</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 27</span> 2...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>2</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 28</span> In a &lt;script&gt; tag, embed the JSON array from sample_test_runs.json 
+di...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>In a &lt;script&gt; tag, embed the JSON array from sample_test_runs.json 
+directly as a JS constant (or fetch it if serving from a local server). 
+Write:
+1. groupByTest(runs) — groups the flat array into {test_name: [runs]}, 
+   with each group&#x27;s runs sorted by timestamp ascending.
+2. flakinessScore(runs) — returns 0 if fewer than 3 runs; otherwise 
+   counts status transitions between consecutive runs (sorted by time) 
+   and divides by (total_runs - 1).
+3. Build a summaries array: one object per test with name, runs, score, 
+   passCount, failCount, total, and the most recent run. Sort this array 
+   descending by score.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 29</span> Using the summaries array, compute and render 4 stat cards into #stats...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Using the summaries array, compute and render 4 stat cards into #stats: 
+total tests monitored, count where score &gt;= 0.2 AND has both passes and 
+fails (flaky), count where score &lt; 0.2 AND failCount is 0 (stable), and 
+count where failCount equals total runs (real bugs, 100% fail rate). 
+Each card: small uppercase muted label, large bold monospace number 
+below, color-coded (teal for stable, amber for flaky, coral for bugs, 
+neutral for total).</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 30</span> Continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 31</span> Populate #table-body: one row per test in summaries. For the &quot;Run 
+his...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Populate #table-body: one row per test in summaries. For the &quot;Run 
+history&quot; column, render the last 14 runs (chronological order) as small 
+adjacent colored rectangles — teal/muted for pass, coral/solid for fail 
+— with a title/tooltip showing status and formatted timestamp on hover. 
+For the Score column, render the score as a monospace badge, colored red 
+if &gt;=0.5, amber if &gt;=0.2, teal otherwise. Show pass/fail counts and the 
+timestamp of the most recent failure (or a dash if none). Each row gets 
+a click handler storing its index in a data attribute.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 32</span> Add two pure JS functions:
+1. normalizeError(msg) — strips digits and ...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Add two pure JS functions:
+1. normalizeError(msg) — strips digits and parenthetical content from an 
+   error message and takes the text before the first colon, so 
+   near-identical errors with different coordinates/counts match as the 
+   same signature.
+2. categorize(errMsg) — lowercases the message and returns {category, 
+   verdict} using keyword rules: &quot;timeout&quot;/&quot;stale&quot;/&quot;target closed&quot; -&gt; 
+   timing/race condition + likely_flaky; &quot;click intercepted&quot;/&quot;not 
+   clickable&quot; -&gt; ui overlay/environment + likely_flaky; &quot;one-off 
+   environment&quot; -&gt; environment + likely_flaky; assertion errors 
+   mentioning specific business terms (discount, pagination, etc.) -&gt; 
+   genuine regression + likely_real_bug; anything else -&gt; unknown + 
+   likely_flaky.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 33</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 34</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 35</span> Add an openPanel(idx) function triggered on row click:
+1. Mark the cli...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Add an openPanel(idx) function triggered on row click:
+1. Mark the clicked row active, set the panel title to the test name.
+2. If the test has zero failures, show an empty-state message and stop.
+3. Otherwise take its most recent failure, normalize its error message, 
+   and run categorize() on it.
+4. Search across the ENTIRE runs dataset (not just this test) for other 
+   failures whose normalized error matches — plus this test&#x27;s own last 
+   few failures — to build a &quot;similar failures&quot; list (cap at 5), each 
+   showing test name and formatted timestamp.
+5. Render a verdict pill (&quot;likely flaky&quot; in amber or &quot;likely real bug&quot; 
+   in coral) and a category pill.
+6. Render a 2-3 sentence explanation: if flaky, reference how many 
+   similar failures were found and that the flip-rate plus recurring 
+   signature points to a non-deterministic cause; if a real bug, note 
+   the consistent 100% failure rate with an identical error every time.
+7. Render a one-line suggested next step, varied by category (e.g. 
+   timing issues -&gt; &quot;add explicit wait/retry&quot;, overlay issues -&gt; &quot;check 
+   for blocking overlay/animation&quot;, real bugs -&gt; &quot;investigate the 
+   underlying logic&quot;).
+8. List the similar failures found in step 4.
+9. Show the panel (toggle a CSS class), and wire the close button to 
+   hide it and clear the active row.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 36</span> Add a mobile breakpoint that collapses the 4 stat cards to a 2x2 grid ...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Add a mobile breakpoint that collapses the 4 stat cards to a 2x2 grid 
+under 640px width. Open dashboard.html directly in a browser (no server 
+needed) and click through: verify at least one clearly flaky test shows 
+a &quot;likely flaky&quot; verdict with multiple similar failures, and at least 
+one real-bug test shows &quot;likely real bug&quot; with no flip pattern in its 
+run-history strip.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 37</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 38</span> Continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 39</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 40</span> Continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 41</span> Continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 42</span> Write docs/integrations/tosca.md explaining the Tosca integration path...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Write docs/integrations/tosca.md explaining the Tosca integration path:
+1. Trigger the TestEvent execution via the Tosca Server Execution API 
+   (or the Tosca Execution Client script) from the CI pipeline.
+2. The Execution API returns results in JUnit format once the run 
+   completes — save that response body as a .xml file.
+3. POST that file to /api/v1/test-runs/ingest-junit with 
+   source_tool=tosca.
+Include a sample curl sequence: trigger execution -&gt; poll/check status 
+-&gt; fetch JUnit results -&gt; forward to the ingestion endpoint. Note that 
+this requires a Tosca Server with the Execution API enabled and a valid 
+API access token.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 43</span> Write a short README section (docs/integrations/playwright.md) 
+explai...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Write a short README section (docs/integrations/playwright.md) 
+explaining: add a JUnit reporter to playwright.config.ts 
+(reporter: [[&#x27;junit&#x27;, { outputFile: &#x27;results/junit.xml&#x27; }]]), then after 
+`npx playwright test` completes in CI, add a step that POSTs 
+results/junit.xml to /api/v1/test-runs/ingest-junit with 
+source_tool=playwright and commit_sha set from the CI environment 
+variable (e.g. $GITHUB_SHA). Include a working curl example and a 
+GitHub Actions step snippet.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 44</span> Write docs/integrations/selenium.md explaining that Selenium itself ha...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Write docs/integrations/selenium.md explaining that Selenium itself has 
+no built-in reporter, so the JUnit XML must come from whatever test 
+runner wraps it. Cover three common cases with config snippets:
+1. pytest + pytest-selenium: run with `pytest --junitxml=results/junit.xml`
+2. JUnit/TestNG + Selenium (Java): JUnit already produces 
+   target/surefire-reports/*.xml by default via Maven Surefire; 
+   TestNG needs the surefire or testng JUnit XML reporter enabled.
+3. RobotFramework + SeleniumLibrary: use `rebot --xunit results/junit.xml` 
+   to convert RobotFramework&#x27;s output.xml into JUnit XML.
+For each, show the CI step that uploads the resulting XML file to 
+/api/v1/test-runs/ingest-junit with source_tool=selenium.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 45</span> Create a sample .github/workflows/test-and-report.yml showing a full 
+...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Create a sample .github/workflows/test-and-report.yml showing a full 
+pipeline: run tests (parameterize this step as a placeholder — Selenium, 
+Playwright, or a Tosca trigger call), locate the resulting JUnit XML 
+file, and curl-POST it to the ingestion endpoint with source_tool and 
+commit_sha (${{ github.sha }}) set correctly, running as the final step 
+regardless of whether the test step passed or failed (use if: always()).</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 46</span> Create three small sample JUnit XML fixture files in 
+backend/tests/fi...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Create three small sample JUnit XML fixture files in 
+backend/tests/fixtures/ (sample_selenium_junit.xml, 
+sample_playwright_junit.xml, sample_tosca_junit.xml), each with 2-3 
+testcases including at least one failure with a realistic error message 
+for that tool&#x27;s style. Write a script that POSTs all three to 
+/api/v1/test-runs/ingest-junit in turn, then calls GET /api/v1/flaky-tests 
+to confirm results from all three tools appear correctly, tagged with 
+the right source_tool, in the same ranked list.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 47</span> ok now open UI...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>ok now open UI</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 48</span> commit and push...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>commit and push</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 49</span> Continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 50</span> Continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 51</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 52</span> how to do this...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>how to do this</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 53</span> status is OK now...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>status is OK now</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 54</span> Give me the exact curl command to POST my sample_test_runs.json (or a ...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Give me the exact curl command to POST my sample_test_runs.json (or a 
+JUnit XML fixture) to my ingestion endpoint running on localhost. Run it, 
+show me the response, and confirm the returned record count matches what 
+was in the file. If it fails, debug the error and fix the ingestion 
+endpoint.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 55</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 56</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 57</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 58</span> Call GET /api/v1/flaky-tests on my local server and show me the full 
+...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Call GET /api/v1/flaky-tests on my local server and show me the full 
+response. Check: do the tests I designed as &quot;flaky&quot; in my sample data 
+show a flakiness score above 0.2? Do the stable tests show a score near 
+0? If any scores look wrong, walk through the calculate_flakiness_score 
+logic with me and find the bug.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 59</span> Call GET /api/v1/flaky-tests/{test_name}/analysis for one clearly flak...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Call GET /api/v1/flaky-tests/{test_name}/analysis for one clearly flaky 
+test and one consistently-failing &quot;real bug&quot; test from my sample data 
+(use the actual test names from my dataset). Show me both responses. 
+Confirm the flaky one returns verdict=&quot;likely_flaky&quot; with a sensible 
+explanation and similar failures listed, and the real-bug one returns 
+verdict=&quot;likely_real_bug&quot;. If either looks wrong, debug the 
+categorization/matching logic.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 60</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 61</span> Call GET /api/v1/flaky-tests/{test_name}/analysis for one clearly flak...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Call GET /api/v1/flaky-tests/{test_name}/analysis for one clearly flaky 
+test and one consistently-failing &quot;real bug&quot; test from my sample data 
+(use the actual test names from my dataset). Show me both responses. 
+Confirm the flaky one returns verdict=&quot;likely_flaky&quot; with a sensible 
+explanation and similar failures listed, and the real-bug one returns 
+verdict=&quot;likely_real_bug&quot;. If either looks wrong, debug the 
+categorization/matching logic.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 62</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 63</span> Start my frontend locally pointed at the local backend. Walk me throug...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>Start my frontend locally pointed at the local backend. Walk me through 
+verifying: the table loads and populates with all tests, the run-history 
+strip shows the correct pass/fail colors in the right order, clicking a 
+row opens the detail panel with the correct verdict/explanation/similar 
+failures for that specific test, and the close button works. List any 
+bugs found and fix them.</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 64</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 65</span> I&#x27;m going to run one real [Selenium/Playwright/Tosca] test suite manua...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>I&#x27;m going to run one real [Selenium/Playwright/Tosca] test suite manually 
+and generate a real JUnit XML output file. Give me the exact command to 
+run for [my chosen tool] that produces JUnit XML output, tell me where 
+the output file will be saved, and then give me the curl command to 
+manually POST that real file to my ingestion endpoint. After I run it, 
+help me verify the parser handled the real file&#x27;s format correctly 
+(check for any fields that came through as null or malformed compared to 
+my synthetic test data).</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 66</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 67</span> push and commit and update the md file with all prompts...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>push and commit and update the md file with all prompts</code></pre>
+          </div>
+        </div>
+        
+
+        <div class="prompt-box">
+          <div class="prompt-header" onclick="togglePrompt(this)">
+            <span><span class="badge badge-blue">Prompt 68</span> continue...</span>
+            <span>▼</span>
+          </div>
+          <div class="prompt-body">
+            <pre><code>continue</code></pre>
+          </div>
+        </div>
+        
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 69</span> <strong>Render Out-of-Memory (502 Bad Gateway) Debugging</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>Render instance crashed with 502 Bad Gateway due to SentenceTransformers / PyTorch memory overhead exceeding 512MB RAM free tier limit.
+
+Solution: Removed PyTorch dependency from Dockerfile, refactored to Groq Cloud API for Llama 3.1 inference, and reduced container footprint to ~35MB RAM.</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 70</span> <strong>Persistent SQLite Disk &amp; Seed Protection (/data/.seeded)</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>Real test data from CI was being overwritten by seed data whenever Render container rebooted.
+
+Solution: Mounted Render persistent disk volume at /data, configured DB_PATH=/data/flaky_test_detector.db, and added one-time .seeded marker file check.</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 71</span> <strong>Step Failure Breakdown &amp; Step Variance Analysis</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>Add step failure breakdown table inside the test detail panel showing run frequency per step and a variance concentration score.
+
+Solution: Added step analysis extracting stack trace lines and evaluating whether failures are concentrated at one step (&gt;=75%) or scattered across steps.</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 72</span> <strong>Actionable Code-Level Suggestions for Playwright, Selenium, Tosca</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>The AI recommendation was giving generic text. We need tool-grounded code fixes tailored to the specific error and framework.
+
+Solution: Rewrote Groq prompt and fallback categorizer to emit concrete syntax (e.g. await page.locator(&#x27;#btn&#x27;).waitFor({ state: &#x27;visible&#x27; }) or WebDriverWait(driver, 10).until(...)).</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 73</span> <strong>Right-Side Slide-Over Drawer UI (Eliminating Bottom Scrolling)</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>When clicking a test row, the detail panel opened below the 100-row table, forcing the user to scroll down every time.
+
+Solution: Transformed detail panel into a modern 720px right-side slide-over drawer with backdrop blur, sticky header, and body scroll lock.</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 74</span> <strong>Table Column Sorting with Multi-Type Tie-Breaking</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>Implement clickable column header sorting for Test Name, History, Score, Pass/Fail, and Last Run, defaulting to most recent run first.
+
+Solution: Added applySortingAndRender() with getSortValue() supporting alphanumeric, numeric, and timestamp comparisons.</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 75</span> <strong>Demo Test Suite Expansion (tests/demo.spec.js with 15 Scenarios)</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>Add realistic flaky test patterns (timing, network 503, session expiry, real bugs, stable baseline) with retries: 2 enabled.
+
+Solution: Authored tests/demo.spec.js with 15 realistic production scenarios and updated playwright.config.js.</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 76</span> <strong>LocalStorage Caching &amp; 4-Stage Render Wakeup Retry</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>On page refresh, if Render is sleeping, the dashboard fell back to sample data instead of showing the 91 real runs.
+
+Solution: Cached real API responses in localStorage (ftd-cached-runs) for instant 0-second render, with 4 background retries (0s, 8s, 15s, 20s) and a live status banner.</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 77</span> <strong>Verdict-Aware Score Badge Colors (Green / Amber / Red)</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>Make the score badge color reflect the test&#x27;s true verdict category, so broken tests (passCount=0) don&#x27;t look green just because flip score is 0.0%.
+
+Solution: Created verdictBadgeClass() -&gt; Green for always passing, Red for always failing (Real Bug), Amber for mixed pass/fail (Flaky).</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 78</span> <strong>Local Timezone Engine (UTC to IST Conversion)</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>Last run column showed 02:13 instead of 07:44 IST because UTC strings without &#x27;Z&#x27; were treated as naive local time.
+
+Solution: Implemented parseUTCDate() which standardizes ISO strings to UTC and lets the browser Date object format local hours and minutes accurately.</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 79</span> <strong>Universal Framework Tag Cleaner (clean_test_name)</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>Playwright tag annotations like &#x27;@demo&#x27; and &#x27;@smoke&#x27; were appearing in the test names in the UI.
+
+Solution: Added clean_test_name() regex filter at the JUnit XML parsing layer in both tools/junit_xml_to_ingest.py and backend/src/services/junit_parser.py.</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 80</span> <strong>Dedicated Fast LIVE DEMO Workflow (Under 15 Seconds)</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>The full 25-minute test suite is too slow for a live 10-minute presentation demo. Create a dedicated fast demo path.
+
+Solution: Tagged representative tests with @demo and created .github/workflows/live-demo-fast.yml running npx playwright test --grep @demo in 12-15 seconds.</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 81</span> <strong>24/7 Render Keep-Awake Cron Workflow (keep-awake.yml)</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>Render Free Tier spins down after 15 minutes of inactivity, causing cold-start loading screens.
+
+Solution: Added .github/workflows/keep-awake.yml scheduled every 10 minutes to ping /health and keep Render active 24/7.</code></pre>
+      </div>
+    </div>
+    
+
+    <div class="prompt-box">
+      <div class="prompt-header" onclick="togglePrompt(this)">
+        <span><span class="badge badge-flaky">Prompt 82</span> <strong>Cross-Repository Ingestion Hook for Advance-Playwright-Framework</strong></span>
+        <span>▼</span>
+      </div>
+      <div class="prompt-body">
+        <pre><code>Enable tests running in Advance-Playwright-Framework repo to ingest into the same central detector dashboard alongside demo tests.
+
+Solution: Configured playwright.yml with JUnit XML reporter and curl ingestion script forwarding results to the Render endpoint.</code></pre>
+      </div>
+    </div>
+    
+      </div>
+    </section>
+
     <footer>
-      <p>🧪 <strong>Flaky Test Detector</strong> • Internal Engineering Knowledge Transfer (KT) Document</p>
-      <p style="margin-top:0.35rem;font-size:0.78rem;color:var(--text-soft);">Generated for Demo Readiness & Architectural Permanence • September 2026</p>
+      <p>🧪 <strong>Flaky Test Detector</strong> • Master Technical Knowledge Transfer Document</p>
+      <p style="margin-top:0.35rem;font-size:0.78rem;color:var(--text-soft);">Complete Historical Archive & Architectural Blueprints • September 2026</p>
     </footer>
 
   </main>
@@ -1419,9 +2474,13 @@ jobs:
         const text = item.textContent.toLowerCase();
         item.style.display = text.includes(q) ? 'flex' : 'none';
       });
+      const prompts = document.querySelectorAll('#prompts-list .prompt-box');
+      prompts.forEach(p => {
+        const text = p.textContent.toLowerCase();
+        p.style.display = text.includes(q) ? 'block' : 'none';
+      });
     }
 
-    // Highlight active nav item on scroll
     window.addEventListener('scroll', () => {
       const sections = document.querySelectorAll('section');
       const scrollPos = window.scrollY + 120;
