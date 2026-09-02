@@ -2,18 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 
-try:
-    from src.models import FlakyTestSummary
-    from src.database import get_db, TestRunORM
-    from src.services.flakiness_scorer import rank_flaky_tests
-    from src.services.vector_store import search_similar_failures
-    from src.services.root_cause_analyzer import generate_root_cause_explanation
-except (ImportError, ModuleNotFoundError):
-    from ..models import FlakyTestSummary
-    from ..database import get_db, TestRunORM
-    from ..services.flakiness_scorer import rank_flaky_tests
-    from ..services.vector_store import search_similar_failures
-    from ..services.root_cause_analyzer import generate_root_cause_explanation
+from ..models import FlakyTestSummary  # type: ignore
+from ..database import get_db, TestRunORM  # type: ignore
+from ..services.flakiness_scorer import rank_flaky_tests  # type: ignore
+from ..services.vector_store import search_similar_failures  # type: ignore
+from ..services.root_cause_analyzer import generate_root_cause_explanation  # type: ignore
 
 router = APIRouter(prefix="/api/v1/flaky-tests", tags=["flaky-tests"])
 
