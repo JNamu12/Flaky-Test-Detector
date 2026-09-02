@@ -425,6 +425,32 @@
 
       // Utility helpers
       const formatScore = score => (score * 100).toFixed(1) + '%';
+
+      /**
+       * Determine the badge CSS class for the Score column based on the
+       * test's actual verdict history — NOT just the raw flakiness score.
+       *
+       * Rules:
+       *  • Green  (pass)  — no failures ever recorded, or all recent runs pass
+       *  • Red    (fail)  — no passes recorded at all (always fails),
+       *                     OR the most recent run failed AND score is still 0
+       *                     (too little history to score, but clearly broken)
+       *  • Amber  (flaky) — has BOTH passes and failures in history
+       */
+      function verdictBadgeClass(s) {
+        const { passCount, failCount, lastRun } = s;
+        // Always failing — never passed
+        if (failCount > 0 && passCount === 0) return 'badge fail';
+        // Mixed history — genuinely flaky
+        if (passCount > 0 && failCount > 0) return 'badge flaky';
+        // No failures at all — clean
+        return 'badge pass';
+      }
+
+      /**
+       * Legacy score-only helper kept for backward compatibility.
+       * Use verdictBadgeClass(summary) for table rows.
+       */
       const badgeClassForScore = score => {
         if (score > 0.5) return 'badge fail';
         if (score >= 0.2) return 'badge flaky';
@@ -607,11 +633,16 @@
         tdHistory.appendChild(strip);
         tr.appendChild(tdHistory);
 
-        // 3 · Score badge (monospace, color-coded)
+        // 3 · Score badge — color reflects verdict category, not just raw score
         const tdScore = document.createElement('td');
         const badge = document.createElement('span');
-        badge.className = badgeClassForScore(s.score) + ' mono';
+        badge.className = verdictBadgeClass(s) + ' mono';
         badge.textContent = formatScore(s.score);
+        // Tooltip explains both score and verdict
+        const verdictLabel = s.failCount === 0 ? 'Always Passing'
+          : s.passCount === 0 ? 'Always Failing (Real Bug)'
+          : 'Flaky (Mixed History)';
+        badge.title = `${verdictLabel} — Flip-rate score: ${formatScore(s.score)}`;
         tdScore.appendChild(badge);
         tr.appendChild(tdScore);
 
