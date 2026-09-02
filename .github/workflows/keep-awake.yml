@@ -1,0 +1,24 @@
+name: Keep Render Backend Awake
+
+on:
+  schedule:
+    # Run every 10 minutes (Render sleeps after 15 minutes of inactivity)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {} # Allows manual trigger from Actions tab
+
+jobs:
+  ping-health:
+    name: Ping Health Endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Backend
+        run: |
+          URL="https://flaky-test-detector-kbpc.onrender.com/health"
+          echo "Pinging ${URL}..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "${URL}" || echo "FAILED")
+          echo "Response HTTP Status: ${STATUS}"
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Render backend is active and awake!"
+          else
+            echo "⚠️ Backend was sleeping or returned non-200. Ping sent to wake it up."
+          fi
