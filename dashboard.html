@@ -546,9 +546,27 @@
       // ---------------------------------------------------------------------
       // Data processing: group raw runs → per-test summaries
       // ---------------------------------------------------------------------
+      function parseUTCDate(ts) {
+        if (!ts) return null;
+        if (ts instanceof Date) return isNaN(ts.getTime()) ? null : ts;
+        let s = String(ts).trim();
+        // Standardize format: "2026-09-02 02:13:45" -> "2026-09-02T02:13:45"
+        s = s.replace(' ', 'T');
+        // If string does not specify timezone offset (+HH:MM, -HH:MM, or Z), treat it as UTC from server
+        if (!s.endsWith('Z') && !/[+-]\d{2}:?\d{2}$/.test(s)) {
+          s += 'Z';
+        }
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : d;
+      }
+
       function groupByTest(runs) {
         const grouped = {};
-        runs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        runs.sort((a, b) => {
+          const tA = parseUTCDate(a.timestamp)?.getTime() || 0;
+          const tB = parseUTCDate(b.timestamp)?.getTime() || 0;
+          return tA - tB;
+        });
         runs.forEach(r => {
           if (!grouped[r.test_name]) grouped[r.test_name] = [];
           grouped[r.test_name].push(r);
@@ -579,8 +597,8 @@
           summaries.push({ name, runs, score, passCount, failCount, total, lastRun, lastFailure });
         }
         summaries.sort((a, b) => {
-          const tsA = a.lastRun ? new Date(a.lastRun.timestamp).getTime() : 0;
-          const tsB = b.lastRun ? new Date(b.lastRun.timestamp).getTime() : 0;
+          const tsA = a.lastRun ? (parseUTCDate(a.lastRun.timestamp)?.getTime() || 0) : 0;
+          const tsB = b.lastRun ? (parseUTCDate(b.lastRun.timestamp)?.getTime() || 0) : 0;
           if (tsB !== tsA) return tsB - tsA; // Most recent test runs first by default!
           return b.score - a.score;
         });
@@ -595,8 +613,8 @@
 
       function formatTS(ts) {
         if (!ts) return '—';
-        const d = new Date(ts);
-        if (isNaN(d.getTime())) return '—';
+        const d = parseUTCDate(ts);
+        if (!d) return '—';
         const day = String(d.getDate()).padStart(2, '0');
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const month = monthNames[d.getMonth()];
@@ -1929,7 +1947,7 @@
           return summary.failCount || 0;
         }
         if (key === 'last_run' || key === 'lastRun' || key === 'timestamp') {
-          return summary.lastRun ? new Date(summary.lastRun.timestamp).getTime() : 0;
+          return summary.lastRun ? (parseUTCDate(summary.lastRun.timestamp)?.getTime() || 0) : 0;
         }
         return summary[key] ?? 0;
       }
