@@ -28,7 +28,7 @@ function isNthRun(testInfo, everyN) {
 // CATEGORY 1 — TIMING / RACE CONDITION
 // ============================================================================
 
-test('checkout_submit_button_race_condition', async ({ page }, testInfo) => {
+test('checkout_submit_button_race_condition @demo', async ({ page }, testInfo) => {
   /**
    * Simulates: element not clickable due to animation/overlay still visible.
    * Pattern: fails ~50% of runs (every other retry), passes otherwise.
@@ -84,7 +84,7 @@ test('search_results_dynamic_load_race', async ({ page }, testInfo) => {
 // CATEGORY 2 — NETWORK FLAKINESS
 // ============================================================================
 
-test('api_checkout_network_intermittent_503', async ({ page }, testInfo) => {
+test('api_checkout_network_intermittent_503 @demo', async ({ page }, testInfo) => {
   /**
    * Simulates: intermittent 503 from payment microservice.
    * Pattern: fails on first attempt (network timeout), passes on retry.
@@ -163,7 +163,7 @@ test('ci_environment_env_variable_missing', async ({ page }, testInfo) => {
 // CATEGORY 4 — GENUINE REGRESSION (always fails)
 // ============================================================================
 
-test('payment_gateway_always_timeout_bug', async ({ page }) => {
+test('payment_gateway_always_timeout_bug @demo', async ({ page }) => {
   /**
    * Simulates: real production bug — payment gateway integration broken.
    * Pattern: ALWAYS fails — genuine regression.
@@ -200,7 +200,7 @@ test('inventory_count_displays_negative_stock', async ({ page }) => {
 // CATEGORY 5 — STABLE / ALWAYS PASSING (baseline)
 // ============================================================================
 
-test('homepage_loads_correctly', async ({ page }) => {
+test('homepage_loads_correctly @demo', async ({ page }) => {
   /**
    * Stable test — always passes. Used as a healthy baseline.
    * Expected detector verdict: stable (low flakiness score)
@@ -231,7 +231,7 @@ test('page_does_not_have_404_text', async ({ page }) => {
 // Original tests preserved below
 // ---------------------------------------------------------------------------
 
-test('demo_flaky_checkout_network_retry', async ({ page }, testInfo) => {
+test('demo_flaky_checkout_network_retry @demo', async ({ page }, testInfo) => {
   await page.goto('https://example.com');
   if (testInfo.retry === 0) {
     expect(false).toBe(true);

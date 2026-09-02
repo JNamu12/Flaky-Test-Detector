@@ -1,0 +1,82 @@
+name: LIVE DEMO — fast subset
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Demo run description (optional)'
+        required: false
+        default: 'Live presentation demo'
+
+jobs:
+  fast-demo-run:
+    name: Run Fast Demo Tests (@demo)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Run Fast Demo Tests (@demo)
+        run: |
+          mkdir -p results
+          npx playwright test --grep @demo --reporter=junit
+        continue-on-error: true
+        # continue-on-error is intentional: tests contain deliberate failures
+        # so results reach the Flaky Test Detector for real-time AI analysis.
+        env:
+          PLAYWRIGHT_JUNIT_OUTPUT_NAME: results/junit.xml
+
+      - name: Send results to Flaky Test Detector
+        if: always()
+        env:
+          API_KEY: ${{ secrets.DETECTOR_API_KEY }}
+          RAW_DETECTOR_URL: ${{ secrets.DETECTOR_URL }}
+        run: |
+          DETECTOR_URL="${RAW_DETECTOR_URL:-https://flaky-test-detector-kbpc.onrender.com}"
+
+          # Wake up Render (free tier sleeps after inactivity)
+          echo "Pinging Render backend to ensure availability..."
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "${DETECTOR_URL}/health" || echo "000")
+            echo "Attempt $i: HTTP $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "Render is awake and healthy!"
+              break
+            fi
+            echo "Waiting 15s before retry..."
+            sleep 15
+          done
+
+          if [ -f results/junit.xml ]; then
+            python tools/junit_xml_to_ingest.py results/junit.xml \
+              --url "${DETECTOR_URL}/api/v1/test-runs/ingest" \
+              --commit-sha "${{ github.sha }}" \
+              --api-key "${API_KEY}"
+          else
+            echo "Warning: results/junit.xml not found. Skipping ingest."
+          fi
+
+      - name: Upload Demo JUnit Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-junit-results
+          path: results/junit.xml
+          if-no-files-found: warn
