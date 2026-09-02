@@ -6,6 +6,7 @@
  * Designed to generate rich, varied data for the Flaky Test Detector dashboard.
  *
  * Categories covered:
+ *  - GENUINELY FLAKY  (Math.random — alternates pass/fail between runs → Amber badge)
  *  - Timing / Race Condition  (element not yet clickable, async load lag)
  *  - Network Flakiness        (API timeout, intermittent 503)
  *  - Environment Flakiness    (session expiry, CI-only failures)
@@ -23,6 +24,89 @@ function isNthRun(testInfo, everyN) {
   const seed = testInfo.title.length + testInfo.retry;
   return (seed % everyN) === 0;
 }
+
+// ============================================================================
+// CATEGORY 0 — GENUINELY FLAKY (random pass/fail across separate CI runs)
+// ============================================================================
+// These tests use Math.random() so they truly alternate pass & fail between
+// independent workflow runs. Across multiple runs the dashboard will show:
+//   History strip: mixed 🟥 🟩 🟥 🟩 → Amber badge "likely_flaky"
+// playwright.config.js must have retries: 0 for these tests to work properly.
+// ============================================================================
+
+test('test_flaky_connection_1 @demo', async ({ page }) => {
+  /**
+   * Simulates: intermittent ConnectionError to backend API.
+   * Each workflow run has ~50% chance of passing or failing — true flakiness.
+   * Expected detector verdict: likely_flaky | Amber badge
+   */
+  await page.goto('https://example.com');
+  await expect(page).toHaveTitle(/Example Domain/);
+
+  // Randomly fail ~50% of workflow runs (no retry — each run gets one chance)
+  if (Math.random() < 0.5) {
+    throw new Error(
+      'ConnectionError: Failed to connect to backend API endpoint ' +
+      'POST /api/v1/checkout/initiate. ECONNRESET — Connection reset by peer. ' +
+      'Intermittent network disruption on CI runner (step: verifyCheckoutResponse).'
+    );
+  }
+});
+
+test('test_flaky_connection_2 @demo', async ({ page }) => {
+  /**
+   * Simulates: intermittent DOM element detach (element removed from DOM mid-test).
+   * Each workflow run has ~50% chance of passing or failing — true flakiness.
+   * Expected detector verdict: likely_flaky | Amber badge
+   */
+  await page.goto('https://example.com');
+  await expect(page).toHaveTitle(/Example Domain/);
+
+  if (Math.random() < 0.5) {
+    throw new Error(
+      'Error: page.click: Element is detached from the DOM. ' +
+      'Selector: #product-add-to-cart-btn. ' +
+      'The element was present during locator resolution but removed before click. ' +
+      'Root cause: React re-render race condition (step: addToCartStep).'
+    );
+  }
+});
+
+test('test_flaky_connection_3 @demo', async ({ page }) => {
+  /**
+   * Simulates: intermittent 503 Service Unavailable from payment microservice.
+   * Each workflow run has ~50% chance of passing or failing — true flakiness.
+   * Expected detector verdict: likely_flaky | Amber badge
+   */
+  await page.goto('https://example.com');
+  await expect(page).toHaveTitle(/Example Domain/);
+
+  if (Math.random() < 0.5) {
+    throw new Error(
+      'NetworkError: HTTP 503 Service Unavailable — GET /api/v1/payments/status. ' +
+      'Response timeout after 30048ms. Retry-After: 5s. ' +
+      'Service experiencing high load on CI infrastructure (step: verifyPaymentStatus).'
+    );
+  }
+});
+
+test('test_flaky_connection_4 @demo', async ({ page }) => {
+  /**
+   * Simulates: intermittent session token expiry during long-running test.
+   * Each workflow run has ~50% chance of passing or failing — true flakiness.
+   * Expected detector verdict: likely_flaky | Amber badge
+   */
+  await page.goto('https://example.com');
+  await expect(page).toHaveTitle(/Example Domain/);
+
+  if (Math.random() < 0.5) {
+    throw new Error(
+      'AssertionError: expect(received).toContain(expected). ' +
+      'Expected page URL to contain "/dashboard" but received "/login?reason=session_expired". ' +
+      'Auth token expired mid-test due to slow CI environment startup (step: verifySessionActive).'
+    );
+  }
+});
 
 // ============================================================================
 // CATEGORY 1 — TIMING / RACE CONDITION

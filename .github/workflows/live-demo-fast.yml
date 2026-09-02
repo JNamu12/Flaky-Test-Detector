@@ -36,7 +36,10 @@ jobs:
       - name: Run Fast Demo Tests (@demo)
         run: |
           mkdir -p results
-          npx playwright test --grep @demo --reporter=junit
+          # --retries=0 ensures genuinely flaky tests (Math.random) are recorded
+          # as real fail/pass each run — no retry masking. This builds up mixed
+          # pass/fail history across runs → Amber "likely_flaky" badge on dashboard.
+          npx playwright test --grep @demo --retries=0 --reporter=junit
         continue-on-error: true
         # continue-on-error is intentional: tests contain deliberate failures
         # so results reach the Flaky Test Detector for real-time AI analysis.
